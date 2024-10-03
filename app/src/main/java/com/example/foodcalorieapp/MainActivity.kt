@@ -5,12 +5,15 @@
 
 // Below link helped in converting Java's time to date format.
 // 2. https://www.javatpoint.com/getting-date-from-calendar-in-java
+
+// Below link helped with updating title in Date Picker when using previous/next arrows.
+// 3. https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#DatePicker(androidx.compose.material3.DatePickerState,androidx.compose.ui.Modifier,androidx.compose.material3.DatePickerFormatter,kotlin.Function0,kotlin.Function0,kotlin.Boolean,androidx.compose.material3.DatePickerColors)
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
 
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -40,14 +43,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
 import java.text.SimpleDateFormat
-import java.util.Calendar
-
 
 // Constants are defined here.
 /* ---------------------------------------------------------- */
@@ -81,8 +81,10 @@ fun MainApp(viewModel: AppViewModel) {
 }
 
 @Composable
-fun PreviousButton() {
-    Button(onClick = { /*TODO*/ },
+fun PreviousButton(viewModel: AppViewModel) {
+    Button(onClick = {
+        viewModel.decrementDate()
+    },
         shape = RectangleShape,
         colors = ButtonDefaults.buttonColors(containerColor = LIGHTER_BACKGROUND_COLOUR)
     ) {
@@ -97,8 +99,10 @@ fun PreviousButton() {
 }
 
 @Composable
-fun NextButton() {
-    Button(onClick = { /*TODO*/ },
+fun NextButton(viewModel: AppViewModel) {
+    Button(onClick = {
+        viewModel.incrementDate()
+    },
         shape = RectangleShape,
         colors = ButtonDefaults.buttonColors(containerColor = LIGHTER_BACKGROUND_COLOUR)
     ) {
@@ -114,9 +118,7 @@ fun NextButton() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DaySwitcher(viewModel: AppViewModel) {
-    val context = LocalContext.current
-
-    val datePickerState = rememberDatePickerState()
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = viewModel.calendarDate.timeInMillis)
     var showDatePicker by remember { mutableStateOf(false) }
 
     Row(modifier = Modifier
@@ -126,7 +128,7 @@ fun DaySwitcher(viewModel: AppViewModel) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        PreviousButton()
+        PreviousButton(viewModel)
 
         // Text indicating date. Can be clicked on to show date picker.
         /* -------------------------------------------------------------------------------- */
@@ -137,34 +139,30 @@ fun DaySwitcher(viewModel: AppViewModel) {
             shape = RectangleShape,
             colors = ButtonDefaults.buttonColors(containerColor = LIGHTER_BACKGROUND_COLOUR)
         ) {
-            viewModel.setCurrentDateIfEmpty()  // Default date is current date when app starts.
-            Text(text = viewModel.date, fontSize = 20.sp, color = Color.White)
-            Toast.makeText(context, "Selected date: ${viewModel.date}", Toast.LENGTH_SHORT).show()
+            //viewModel.setCurrentDateIfEmpty()  // Default date is current date when app starts.
+            Text(text = viewModel.formattedDate, fontSize = 20.sp, color = Color.White)
         }
         /* -------------------------------------------------------------------------------- */
 
-        NextButton()
+        NextButton(viewModel)
 
         // Date picker component
         /* -------------------------------------------------------------------------------- */
         if (showDatePicker) {
             DatePickerDialog(
-                onDismissRequest = { /*TODO*/ },
-                confirmButton = { 
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
                     TextButton(onClick = {
-                        val selectedDate = Calendar.getInstance().apply {
-                            timeInMillis = datePickerState.selectedDateMillis!!
-                        }
-                        val date = selectedDate.time
-                        val dateFormat = SimpleDateFormat.getDateInstance()
-                        val formattedDate = dateFormat.format(date)
+                        viewModel.calendarDate.timeInMillis = datePickerState.selectedDateMillis!!
+                        val formattedDate = SimpleDateFormat.getDateInstance().format(viewModel.calendarDate.timeInMillis)
                         showDatePicker = false
-                        viewModel.date = formattedDate
+
+                        viewModel.formattedDate = formattedDate
                     }) {
                         Text("OK")
                     }
                 },
-                dismissButton = { 
+                dismissButton = {
                     TextButton(onClick = { showDatePicker = false }) {
                         Text("Cancel")
                     }
@@ -174,5 +172,10 @@ fun DaySwitcher(viewModel: AppViewModel) {
             }
         }
         /* -------------------------------------------------------------------------------- */
+
+        // This one line is responsible for allowing the date in the date picker to be
+        // synchronised with when the arrow is clicked.
+        datePickerState.selectedDateMillis = viewModel.calendarDate.timeInMillis
+        Log.d("Testing", viewModel.formattedDate)
     }
 }
