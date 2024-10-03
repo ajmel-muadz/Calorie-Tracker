@@ -3,18 +3,16 @@
 // Below link helped with date and time picker in Jetpack Compose.
 // 1. https://medium.com/@droidvikas/exploring-date-and-time-pickers-compose-bytes-120e75349797
 
-// Below link helpedd in converting Java's time to date format.
+// Below link helped in converting Java's time to date format.
 // 2. https://www.javatpoint.com/getting-date-from-calendar-in-java
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
 
-import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -44,12 +42,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
 import java.text.SimpleDateFormat
-import java.time.LocalDate
 import java.util.Calendar
 
 
