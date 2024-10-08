@@ -98,6 +98,10 @@ fun MainApp(viewModel: AppViewModel) {
             label = { Text("Search Food") }
         )
 
+        if (loading) {
+            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+        }
+
         Button(onClick = {
             viewModel.fetchName(searchKey)
         }) {
@@ -127,20 +131,14 @@ fun MainApp(viewModel: AppViewModel) {
         carbs?.let { carbs ->
             Text(text = "Carbs: $carbs")
         }
-    }
 
-    if (loading) {
-        CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-    }
-
-    // Show error message if any
-    errorMessage?.let {
-        if (it.isNotEmpty()) {
-            Text(text = it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp))
+        // Show error message if any
+        errorMessage?.let {
+            if (it.isNotEmpty()) {
+                Text(text = it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp))
+            }
         }
     }
-
-    name?.let { Log.d("MuadzTesting", it) }
 
 //    Column(
 //        modifier = Modifier
