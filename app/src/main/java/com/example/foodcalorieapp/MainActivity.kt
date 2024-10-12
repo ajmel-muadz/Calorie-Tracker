@@ -12,6 +12,8 @@
 
 package com.example.foodcalorieapp
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -28,17 +30,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,77 +76,17 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainApp(viewModel: AppViewModel) {
-    var searchKey by remember { mutableStateOf("") }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BACKGROUND_COLOUR)
+    ) {
+        // Composable which contains day switcher
+        DaySwitcher(viewModel)
 
-    // Observe StateFlow as State
-    val name by viewModel.name.collectAsState()
-    val servingSize by viewModel.servingSize.collectAsState()
-    val calories by viewModel.calories.collectAsState()
-    val fat by viewModel.fat.collectAsState()
-    val protein by viewModel.protein.collectAsState()
-    val carbs by viewModel.carbs.collectAsState()
-
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    val loading by viewModel.loading.collectAsState()
-
-    // UI elements for input and button
-    Column {
-        TextField(
-            value = searchKey,
-            onValueChange = { searchKey = it },
-            label = { Text("Search Food") }
-        )
-
-        if (loading) {
-            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-        }
-
-        Button(onClick = {
-            viewModel.fetchName(searchKey)
-        }) {
-            Text("Search")
-        }
-
-        name?.let { name -> 
-            Text(text = "Name: $name")
-        }
-        
-        servingSize?.let { servingSize ->
-            Text(text = "Serving size: $servingSize")
-        }
-
-        calories?.let { calories ->
-            Text(text = "Calories: $calories")
-        }
-
-        fat?.let { fat ->
-            Text(text = "Fat: $fat")
-        }
-        
-        protein?.let { protein ->
-            Text(text = "Protein: $protein")
-        }
-        
-        carbs?.let { carbs ->
-            Text(text = "Carbs: $carbs")
-        }
-
-        // Show error message if any
-        errorMessage?.let {
-            if (it.isNotEmpty()) {
-                Text(text = it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp))
-            }
-        }
+        // Button used to add food.
+        SearchFoodButton()
     }
-
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .background(BACKGROUND_COLOUR)
-//    ) {
-//        // Composable which contains day switcher
-//        DaySwitcher(viewModel)
-//    }
 }
 
 @Composable
@@ -209,7 +148,6 @@ fun DaySwitcher(viewModel: AppViewModel) {
             shape = RectangleShape,
             colors = ButtonDefaults.buttonColors(containerColor = LIGHTER_BACKGROUND_COLOUR)
         ) {
-            //viewModel.setCurrentDateIfEmpty()  // Default date is current date when app starts.
             Text(text = viewModel.formattedDate, fontSize = 20.sp, color = Color.White)
         }
         /* -------------------------------------------------------------------------------- */
@@ -247,5 +185,22 @@ fun DaySwitcher(viewModel: AppViewModel) {
         // synchronised with when the arrow is clicked.
         datePickerState.selectedDateMillis = viewModel.calendarDate.timeInMillis
         Log.d("Testing", viewModel.formattedDate)
+    }
+}
+
+
+private fun launchAddFoodActivity(context: Context) {
+    val intent = Intent(context, AddFoodActivity::class.java)
+    context.startActivity(intent)
+}
+
+@Composable
+fun SearchFoodButton() {
+    val context = LocalContext.current
+
+    Button(onClick = {
+        launchAddFoodActivity(context)
+    }) {
+        Text(text = "Search Food")
     }
 }
