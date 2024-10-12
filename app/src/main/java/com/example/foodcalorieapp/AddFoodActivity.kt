@@ -76,7 +76,7 @@ class AddFoodActivity : ComponentActivity() {
 fun AddFoodScreen(viewModel: AppViewModel) {
     val context = LocalContext.current
 
-    var searchKey by remember { mutableStateOf("") }
+    var searchKey by remember { mutableStateOf("") }  // Variable for search term
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -99,8 +99,8 @@ fun AddFoodScreen(viewModel: AppViewModel) {
             shape = RoundedCornerShape(10.dp),
             trailingIcon = {
                 IconButton(onClick = {
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
+                    focusManager.clearFocus()  // Clear cursor focus.
+                    keyboardController?.hide()  // Hide keyboard.
 
                     viewModel.fetchItems(searchKey)
                 }) {
@@ -125,7 +125,8 @@ fun AddFoodScreen(viewModel: AppViewModel) {
                 CircularProgressIndicator()
             }
 
-            // Display the values we need from the API call.
+            // Display the values retrieved from the API call.
+            /* -------------------------------------------------------------------------- */
             if (viewModel.name != "<Empty>" && viewModel.name != "No item found") {
                 Card(
                     modifier = Modifier
@@ -152,12 +153,18 @@ fun AddFoodScreen(viewModel: AppViewModel) {
                     }
                 }
             }
+            /* -------------------------------------------------------------------------- */
+
+            // If no food item is found we launch an activity allowing for manually'
+            // inputting the food yeah.
             if (viewModel.name == "No item found") {
                 launchAddNutritionActivity(context, searchKey)
                 viewModel.name = "<Empty>"
             }
         }
 
+        // If API query does not result in "No item found" and it is not empty,
+        // we show the 'Add food' button allowing for adding to the log.
         if (viewModel.name != "No item found" && viewModel.name != "<Empty>") {
             Button(onClick = { /*TODO*/ }, modifier = Modifier.padding(bottom = 10.dp)) {
                 Text(text = "Add Food")

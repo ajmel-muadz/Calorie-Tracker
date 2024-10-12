@@ -90,7 +90,7 @@ fun MainApp(viewModel: AppViewModel) {
 }
 
 @Composable
-fun PreviousButton(viewModel: AppViewModel) {
+fun PreviousDay(viewModel: AppViewModel) {
     Button(onClick = {
         viewModel.decrementDate()
     },
@@ -108,7 +108,7 @@ fun PreviousButton(viewModel: AppViewModel) {
 }
 
 @Composable
-fun NextButton(viewModel: AppViewModel) {
+fun NextDay(viewModel: AppViewModel) {
     Button(onClick = {
         viewModel.incrementDate()
     },
@@ -137,7 +137,7 @@ fun DaySwitcher(viewModel: AppViewModel) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        PreviousButton(viewModel)
+        PreviousDay(viewModel)
 
         // Text indicating date. Can be clicked on to show date picker.
         /* -------------------------------------------------------------------------------- */
@@ -152,7 +152,7 @@ fun DaySwitcher(viewModel: AppViewModel) {
         }
         /* -------------------------------------------------------------------------------- */
 
-        NextButton(viewModel)
+        NextDay(viewModel)
 
         // Date picker component
         /* -------------------------------------------------------------------------------- */

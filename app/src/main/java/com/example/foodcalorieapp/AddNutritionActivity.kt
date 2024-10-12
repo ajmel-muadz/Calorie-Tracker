@@ -63,10 +63,13 @@ class AddNutritionActivity : ComponentActivity() {
 
 @Composable
 fun AddNutritionScreen(viewModel: AppViewModel, invalidFoodName: String?) {
+    // These variables are for storing value of input text.
+    /* ---------------------------------------------------------- */
     var caloriesInput by remember { mutableStateOf("") }
     var fatInput by remember { mutableStateOf("") }
     var proteinInput by remember { mutableStateOf("") }
     var carbsInput by remember { mutableStateOf("") }
+    /* ---------------------------------------------------------- */
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -92,6 +95,8 @@ fun AddNutritionScreen(viewModel: AppViewModel, invalidFoodName: String?) {
                 modifier = Modifier.padding(10.dp)
             )
 
+            // Text fields are in this code block.
+            /* ---------------------------------------------------------------------------- */
             TextField(
                 value = caloriesInput,
                 onValueChange = { caloriesInput = it },
@@ -187,6 +192,7 @@ fun AddNutritionScreen(viewModel: AppViewModel, invalidFoodName: String?) {
                 modifier = Modifier.padding(10.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
+            /* ---------------------------------------------------------------------------- */
         }
 
         viewModel.name = invalidFoodName
@@ -195,7 +201,8 @@ fun AddNutritionScreen(viewModel: AppViewModel, invalidFoodName: String?) {
         viewModel.fat = fatInput.toDoubleOrNull()
         viewModel.protein = proteinInput.toDoubleOrNull()
         viewModel.carbs = carbsInput.toDoubleOrNull()
-        
+
+        // We only allowing for adding the food if all input fields are populated with numbers.
         if (viewModel.calories != null && viewModel.fat != null && viewModel.protein != null
             && viewModel.carbs != null) {
             Button(onClick = { /*TODO*/ }, modifier = Modifier.padding(bottom = 10.dp)) {
