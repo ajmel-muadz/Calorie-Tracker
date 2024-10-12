@@ -1,6 +1,6 @@
 // Credits...
 /* -------------------------------------------------------------------------------- */
-// Below documentation helped with learning how to use Retrofit's headers.
+// Below link helped with learning how to use Retrofit's headers.
 // 1. https://square.github.io/retrofit/
 /* -------------------------------------------------------------------------------- */
 

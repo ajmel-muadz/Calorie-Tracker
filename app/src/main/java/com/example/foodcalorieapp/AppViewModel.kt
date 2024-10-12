@@ -30,40 +30,25 @@ class AppViewModel : ViewModel() {
         this.formattedDate = SimpleDateFormat.getDateInstance().format(this.calendarDate.timeInMillis)
     }
 
-    // --------------------------------------------------------------------------------- //
 
-    // MutableStateFlow to hold the food name.
-    private val _name = MutableStateFlow<String?>("<Empty>")
-    val name: StateFlow<String?> get() = _name
+    // Anything contained in this code block is wholly responsible for API calls.
+    /* -------------------------------------------------------------------------------------- */
+    var name by mutableStateOf<String?>("<Empty>")
+    var servingSize by mutableStateOf<Double?>(0.0)
+    var calories by mutableStateOf<Double?>(0.0)
+    var fat by mutableStateOf<Double?>(0.0)
+    var protein by mutableStateOf<Double?>(0.0)
+    var carbs by mutableStateOf<Double?>(0.0)
 
-    private val _servingSize = MutableStateFlow<Double?>(0.0)
-    val servingSize: StateFlow<Double?> get() = _servingSize
-
-    private val _calories = MutableStateFlow<Double?>(0.0)
-    val calories: StateFlow<Double?> get() = _calories
-
-    private val _fat = MutableStateFlow<Double?>(0.0)
-    val fat: StateFlow<Double?> get() = _fat
-
-    private val _protein = MutableStateFlow<Double?>(0.0)
-    val protein: StateFlow<Double?> get() = _protein
-
-    private val _carbs = MutableStateFlow<Double?>(0.0)
-    val carbs: StateFlow<Double?> get() = _carbs
-
-    // MutableStateFlow to hold error messages
-    private val _errorMessage = MutableStateFlow<String?>("")
-    val errorMessage: StateFlow<String?> get() = _errorMessage
-
-    // MutableStateFlow to hold loading state
-    private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> get() = _loading
+    var errorMessage by mutableStateOf<String?>("")
+    var loading by mutableStateOf<Boolean>(false)
 
     private val apiService = RetrofitInstance.api
 
     // Function to perform the network call.
-    fun fetchName(searchQuery: String) {
-        _loading.value = true
+    fun fetchItems(searchQuery: String) {
+        //_loading.value = true
+        loading = true
 
         viewModelScope.launch {
             try {
@@ -71,24 +56,25 @@ class AppViewModel : ViewModel() {
                     apiService.getItemsList(searchQuery)
                 }
 
-                _name.value = searchResult.items.firstOrNull()?.name ?: "No item found"
-                _servingSize.value = searchResult.items.firstOrNull()?.servingSize ?: 0.0
-                _calories.value = searchResult.items.firstOrNull()?.calories ?: 0.0
-                _fat.value = searchResult.items.firstOrNull()?.fat ?: 0.0
-                _protein.value = searchResult.items.firstOrNull()?.protein ?: 0.0
-                _carbs.value = searchResult.items.firstOrNull()?.carbs ?: 0.0
-                _errorMessage.value = null
+                name = searchResult.items.firstOrNull()?.name ?: "No item found"
+                servingSize = searchResult.items.firstOrNull()?.servingSize ?: 0.0
+                calories = searchResult.items.firstOrNull()?.calories ?: 0.0
+                fat = searchResult.items.firstOrNull()?.fat ?: 0.0
+                protein = searchResult.items.firstOrNull()?.protein ?: 0.0
+                carbs = searchResult.items.firstOrNull()?.carbs ?: 0.0
+                errorMessage = null
             } catch (e: Exception) {
-                _errorMessage.value = "Error fetching name: ${e.message}"
-                _name.value = null
-                _servingSize.value = null
-                _calories.value = null
-                _fat.value = null
-                _protein.value = null
-                _carbs.value = null
+                errorMessage = "Error fetching name: ${e.message}"
+                name = null
+                servingSize = null
+                calories = null
+                fat = null
+                protein = null
+                carbs = null
             } finally {
-                _loading.value = false
+                loading = false
             }
         }
     }
+    /* -------------------------------------------------------------------------------------- */
 }
