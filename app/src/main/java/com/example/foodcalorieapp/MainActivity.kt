@@ -24,18 +24,32 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -53,6 +67,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
@@ -88,16 +103,122 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BACKGROUND_COLOUR)
+            .background(BACKGROUND_COLOUR),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Composable which contains day switcher
-        DaySwitcher(viewModel, dateWithFoodsDao)
+        DaySwitcher(viewModel)
+        
+        Spacer(modifier = Modifier.height(5.dp))  // Add some space between date switcher and list.
+
+        // This code block is responsible for displaying the foods in a list.
+        /* ----------------------------------------------------------------------------- */
+        Column(
+            modifier = Modifier
+                .weight(1f)
+        ) {
+            val foodsToDisplay = mutableListOf<FoodDisplay>()
+            var foodsList by remember { mutableStateOf<List<Food>>(emptyList()) }
+            LaunchedEffect(viewModel.formattedDate) {
+                scope.launch {
+                    val foodsRetrieved = dateWithFoodsDao.getFoodsWithDate(viewModel.formattedDate)
+                    foodsList = foodsRetrieved
+                }
+            }
+            for (food in foodsList) {
+                val foodName = food.name
+                val foodCalories = food.calories
+                val foodFat = food.fat
+                val foodProtein = food.protein
+                val foodCarbs = food.carbs
+
+                val foodToAdd = FoodDisplay(name = foodName, calories = foodCalories,
+                    fat = foodFat, protein = foodProtein, carbs = foodCarbs)
+
+                foodsToDisplay.add(foodToAdd)
+            }
+
+            FoodList(foodDisplays = foodsToDisplay, modifier = Modifier.weight(1f))
+        }
+        /* ----------------------------------------------------------------------------- */
 
         // Button used to add food.
         SearchFoodButton(viewModel)
+    }
+}
+
+@Composable
+fun SingleFood(foodDisplay: FoodDisplay) {
+    Card(
+        modifier = Modifier
+            .padding(10.dp)
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        shape = RoundedCornerShape(20)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                // Display food name.
+                Text(
+                    text = foodDisplay.name,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                // Display food macros.
+                Text(
+                    text = "${foodDisplay.calories} kcal",
+                    fontSize = 12.sp
+                )
+            }
+
+            // Row for icons
+            Row(
+            ) {
+                Box(
+                    modifier = Modifier.size(50.dp)
+                        .clickable {  },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = "Edit a food's properties.",
+                    )
+                }
+
+                Box(
+                    modifier = Modifier.size(50.dp)
+                        .clickable {  },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Delete a food from the day's log.",
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier) {
+    LazyColumn(modifier = modifier) {
+        items(foodDisplays) { foodDisplay: FoodDisplay ->
+            SingleFood(foodDisplay = foodDisplay)
+        }
     }
 }
 
@@ -138,9 +259,7 @@ fun NextDay(viewModel: AppViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DaySwitcher(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
-    val scope = rememberCoroutineScope()
-
+fun DaySwitcher(viewModel: AppViewModel) {
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = viewModel.calendarDate.timeInMillis)
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -198,13 +317,6 @@ fun DaySwitcher(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
         // synchronised with when the arrow is clicked.
         datePickerState.selectedDateMillis = viewModel.calendarDate.timeInMillis
     }
-
-    LaunchedEffect(viewModel.formattedDate) {
-        scope.launch {
-            Log.d("Testing", viewModel.formattedDate)
-            Log.d("Testing", dateWithFoodsDao.getFoodsWithDate(viewModel.formattedDate).toString())
-        }
-    }
 }
 
 
@@ -221,7 +333,7 @@ fun SearchFoodButton(viewModel: AppViewModel) {
 
     Button(onClick = {
         launchAddFoodActivity(context, viewModel)
-    }) {
+    }, modifier = Modifier.padding(bottom = 10.dp)) {
         Text(text = "Search Food")
     }
 }

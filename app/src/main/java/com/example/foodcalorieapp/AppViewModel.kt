@@ -6,8 +6,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -41,7 +39,7 @@ class AppViewModel : ViewModel() {
     var carbs by mutableStateOf<Double?>(0.0)
 
     var errorMessage by mutableStateOf<String?>("")
-    var loading by mutableStateOf<Boolean>(false)
+    var loading by mutableStateOf(false)
 
     private val apiService = RetrofitInstance.api
 
