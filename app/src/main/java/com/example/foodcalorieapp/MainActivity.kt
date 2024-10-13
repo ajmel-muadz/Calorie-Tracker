@@ -74,9 +74,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             FoodCalorieAppTheme {
-                var returnCurrentDate = intent.getStringExtra("RETURN_CURRENT_DATE")
+                val returnCurrentDate = intent.getStringExtra("RETURN_CURRENT_DATE")
+                val returnCurrentDateTimeInMillis = intent.getLongExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", 0)
                 if (returnCurrentDate != null) {
                     appViewModel.formattedDate = returnCurrentDate
+                    appViewModel.calendarDate.timeInMillis = returnCurrentDateTimeInMillis
                 }
                 MainApp(viewModel = appViewModel, dateWithFoodsDao = dao)
             }
@@ -209,6 +211,7 @@ fun DaySwitcher(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
 private fun launchAddFoodActivity(context: Context, viewModel: AppViewModel) {
     val intent = Intent(context, AddFoodActivity::class.java)
     intent.putExtra("CURRENT_DATE", viewModel.formattedDate)
+    intent.putExtra("CURRENT_DATE_TIME_IN_MILLIS", viewModel.calendarDate.timeInMillis)
     context.startActivity(intent)
 }
 

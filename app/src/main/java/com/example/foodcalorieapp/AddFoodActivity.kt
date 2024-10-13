@@ -72,7 +72,8 @@ class AddFoodActivity : ComponentActivity() {
         setContent {
             FoodCalorieAppTheme {
                 val currentDate = intent.getStringExtra("CURRENT_DATE")
-                AddFoodScreen(viewModel = appViewModel, dateWithFoodsDao = dao, currentDate)
+                val currentDateTimeInMillis = intent.getLongExtra("CURRENT_DATE_TIME_IN_MILLIS", 0)
+                AddFoodScreen(viewModel = appViewModel, dateWithFoodsDao = dao, currentDate, currentDateTimeInMillis)
             }
         }
     }
@@ -80,7 +81,7 @@ class AddFoodActivity : ComponentActivity() {
 
 
 @Composable
-fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, currentDate: String?) {
+fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, currentDate: String?, currentDateTimeInMillis: Long) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -195,7 +196,7 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
                 /* ------------------------------------------------------------------------------------------- */
 
                 // Go back to main screen when we add food.
-                launchMainActivity(context, currentDateToAdd)
+                launchMainActivity(context, currentDateToAdd, currentDateTimeInMillis)
 
             }, modifier = Modifier.padding(bottom = 10.dp)) {
                 Text(text = "Add Food")
@@ -222,8 +223,9 @@ private fun launchAddNutritionActivity(context: Context, searchKey: String, curr
     context.startActivity(intent)
 }
 
-private fun launchMainActivity(context: Context, returnCurrentDate: String?) {
+private fun launchMainActivity(context: Context, returnCurrentDate: String?, returnCurrentDateTimeInMillis: Long) {
     val intent = Intent(context, MainActivity::class.java)
     intent.putExtra("RETURN_CURRENT_DATE", returnCurrentDate)
+    intent.putExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", returnCurrentDateTimeInMillis)
     context.startActivity(intent)
 }
