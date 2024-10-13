@@ -61,8 +61,9 @@ class AddNutritionActivity : ComponentActivity() {
             FoodCalorieAppTheme {
                 val invalidFoodName = intent.getStringExtra("INVALID_FOOD_NAME")
                 val currentDate = intent.getStringExtra("CURRENT_DATE")
+                val currentDateTimeInMillis = intent.getLongExtra("CURRENT_DATE_TIME_IN_MILLIS", 0)
                 AddNutritionScreen(viewModel = appViewModel, dateWithFoodsDao = dao,
-                    invalidFoodName, currentDate)
+                    invalidFoodName, currentDate, currentDateTimeInMillis)
             }
         }
     }
@@ -70,7 +71,7 @@ class AddNutritionActivity : ComponentActivity() {
 
 @Composable
 fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao,
-                       invalidFoodName: String?, currentDate: String?) {
+                       invalidFoodName: String?, currentDate: String?, currentDateTimeInMillis: Long) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -237,7 +238,7 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
                 /* ------------------------------------------------------------------------------------------- */
 
                 // Go back to main screen when we add food.
-                launchMainActivity(context, currentDateToAdd)
+                launchMainActivity(context, currentDateToAdd, currentDateTimeInMillis)
 
             }, modifier = Modifier.padding(bottom = 10.dp)) {
                 Text(text = "Add New Food")
@@ -247,8 +248,9 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
 }
 
 
-private fun launchMainActivity(context: Context, returnCurrentDate: String?) {
+private fun launchMainActivity(context: Context, returnCurrentDate: String?, returnCurrentDateTimeInMillis: Long) {
     val intent = Intent(context, MainActivity::class.java)
     intent.putExtra("RETURN_CURRENT_DATE", returnCurrentDate)
+    intent.putExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", returnCurrentDateTimeInMillis)
     context.startActivity(intent)
 }

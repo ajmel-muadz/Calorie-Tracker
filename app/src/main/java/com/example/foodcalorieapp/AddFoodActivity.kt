@@ -167,7 +167,7 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
             // If no food item is found we launch an activity allowing for manually'
             // inputting the food yeah.
             if (viewModel.name == "No item found") {
-                launchAddNutritionActivity(context, searchKey, currentDate)
+                launchAddNutritionActivity(context, searchKey, currentDate, currentDateTimeInMillis)
                 viewModel.name = "<Empty>"
             }
         }
@@ -216,10 +216,11 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
 }
 
 
-private fun launchAddNutritionActivity(context: Context, searchKey: String, currentDate: String?) {
+private fun launchAddNutritionActivity(context: Context, searchKey: String, currentDate: String?, currentDateTimeInMillis: Long) {
     val intent = Intent(context, AddNutritionActivity::class.java)
     intent.putExtra("INVALID_FOOD_NAME", searchKey)
     intent.putExtra("CURRENT_DATE", currentDate)
+    intent.putExtra("CURRENT_DATE_TIME_IN_MILLIS", currentDateTimeInMillis)
     context.startActivity(intent)
 }
 
