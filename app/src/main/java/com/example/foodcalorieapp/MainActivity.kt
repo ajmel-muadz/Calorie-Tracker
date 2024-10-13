@@ -61,7 +61,6 @@ val DATE_ARROW_ICONS = R.drawable.white_next
 /* ---------------------------------------------------------- */
 
 class MainActivity : ComponentActivity() {
-
     private val appViewModel: AppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,12 +84,12 @@ fun MainApp(viewModel: AppViewModel) {
         DaySwitcher(viewModel)
 
         // Button used to add food.
-        SearchFoodButton()
+        SearchFoodButton(viewModel)
     }
 }
 
 @Composable
-fun PreviousButton(viewModel: AppViewModel) {
+fun PreviousDay(viewModel: AppViewModel) {
     Button(onClick = {
         viewModel.decrementDate()
     },
@@ -108,7 +107,7 @@ fun PreviousButton(viewModel: AppViewModel) {
 }
 
 @Composable
-fun NextButton(viewModel: AppViewModel) {
+fun NextDay(viewModel: AppViewModel) {
     Button(onClick = {
         viewModel.incrementDate()
     },
@@ -137,7 +136,7 @@ fun DaySwitcher(viewModel: AppViewModel) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        PreviousButton(viewModel)
+        PreviousDay(viewModel)
 
         // Text indicating date. Can be clicked on to show date picker.
         /* -------------------------------------------------------------------------------- */
@@ -152,7 +151,7 @@ fun DaySwitcher(viewModel: AppViewModel) {
         }
         /* -------------------------------------------------------------------------------- */
 
-        NextButton(viewModel)
+        NextDay(viewModel)
 
         // Date picker component
         /* -------------------------------------------------------------------------------- */
@@ -184,22 +183,22 @@ fun DaySwitcher(viewModel: AppViewModel) {
         // This one line is responsible for allowing the date in the date picker to be
         // synchronised with when the arrow is clicked.
         datePickerState.selectedDateMillis = viewModel.calendarDate.timeInMillis
-        Log.d("Testing", viewModel.formattedDate)
     }
 }
 
 
-private fun launchAddFoodActivity(context: Context) {
+private fun launchAddFoodActivity(context: Context, viewModel: AppViewModel) {
     val intent = Intent(context, AddFoodActivity::class.java)
+    intent.putExtra("CURRENT_DATE", viewModel.formattedDate)
     context.startActivity(intent)
 }
 
 @Composable
-fun SearchFoodButton() {
+fun SearchFoodButton(viewModel: AppViewModel) {
     val context = LocalContext.current
 
     Button(onClick = {
-        launchAddFoodActivity(context)
+        launchAddFoodActivity(context, viewModel)
     }) {
         Text(text = "Search Food")
     }

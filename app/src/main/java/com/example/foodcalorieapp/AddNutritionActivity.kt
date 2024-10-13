@@ -33,10 +33,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
@@ -45,31 +47,42 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
+import kotlinx.coroutines.launch
 
 class AddNutritionActivity : ComponentActivity() {
 
     private val appViewModel: AppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val dao = AppDatabase.getInstance(this).dateWithFoodsDao
         super.onCreate(savedInstanceState)
         setContent {
             FoodCalorieAppTheme {
                 val invalidFoodName = intent.getStringExtra("INVALID_FOOD_NAME")
-                AddNutritionScreen(viewModel = appViewModel, invalidFoodName)
+                val currentDate = intent.getStringExtra("CURRENT_DATE")
+                AddNutritionScreen(viewModel = appViewModel, dateWithFoodsDao = dao,
+                    invalidFoodName, currentDate)
             }
         }
     }
 }
 
 @Composable
-fun AddNutritionScreen(viewModel: AppViewModel, invalidFoodName: String?) {
+fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao,
+                       invalidFoodName: String?, currentDate: String?) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    // These variables are for storing value of input text.
+    /* ---------------------------------------------------------- */
     var caloriesInput by remember { mutableStateOf("") }
     var fatInput by remember { mutableStateOf("") }
     var proteinInput by remember { mutableStateOf("") }
     var carbsInput by remember { mutableStateOf("") }
-
-    val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
+    /* ---------------------------------------------------------- */
 
     Column(
         modifier = Modifier
@@ -92,6 +105,8 @@ fun AddNutritionScreen(viewModel: AppViewModel, invalidFoodName: String?) {
                 modifier = Modifier.padding(10.dp)
             )
 
+            // Text fields are in this code block.
+            /* ---------------------------------------------------------------------------- */
             TextField(
                 value = caloriesInput,
                 onValueChange = { caloriesInput = it },
@@ -187,6 +202,7 @@ fun AddNutritionScreen(viewModel: AppViewModel, invalidFoodName: String?) {
                 modifier = Modifier.padding(10.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
+            /* ---------------------------------------------------------------------------- */
         }
 
         viewModel.name = invalidFoodName
@@ -195,10 +211,28 @@ fun AddNutritionScreen(viewModel: AppViewModel, invalidFoodName: String?) {
         viewModel.fat = fatInput.toDoubleOrNull()
         viewModel.protein = proteinInput.toDoubleOrNull()
         viewModel.carbs = carbsInput.toDoubleOrNull()
-        
+
+        // We only allowing for adding the food if all input fields are populated with numbers.
         if (viewModel.calories != null && viewModel.fat != null && viewModel.protein != null
             && viewModel.carbs != null) {
-            Button(onClick = { /*TODO*/ }, modifier = Modifier.padding(bottom = 10.dp)) {
+            Button(onClick = {
+                val currentDateToAdd: String = currentDate!!  // Current date passed from intent
+                val foodNameToAdd: String = viewModel.name!!
+                val foodCaloriesToAdd: Double = viewModel.calories!!
+                val foodFatToAdd: Double = viewModel.fat!!
+                val foodProteinToAdd: Double = viewModel.protein!!
+                val foodCarbsToAdd: Double = viewModel.carbs!!
+
+                val dateToInsert = Date(currentDateToAdd)
+                val foodToInsert = Food(name = foodNameToAdd, calories = foodCaloriesToAdd, fat = foodFatToAdd,
+                    protein = foodProteinToAdd, carbs = foodCarbsToAdd, dateString = currentDateToAdd)
+
+                scope.launch {
+                    dateWithFoodsDao.insertDate(dateToInsert)
+                    dateWithFoodsDao.insertFood(foodToInsert)
+                }
+
+            }, modifier = Modifier.padding(bottom = 10.dp)) {
                 Text(text = "Add New Food")
             }
         }
