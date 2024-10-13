@@ -11,6 +11,9 @@
 
 // Below link helped with clearing TextField focus when search icon is clicked.
 // 4. https://stackoverflow.com/questions/67058630/how-clear-focus-for-basictextfield-in-jetpack-compose
+
+// Below link helped with calling suspend functions inside composables.
+// 5. https://developer.android.com/develop/ui/compose/side-effects#:~:text=To%20perform%20work%20over%20the,if%20LaunchedEffect%20leaves%20the%20composition.
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
@@ -18,6 +21,7 @@ package com.example.foodcalorieapp
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -44,6 +48,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,17 +60,27 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class AddFoodActivity : ComponentActivity() {
-
     private val appViewModel: AppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val dao = AppDatabase.getInstance(this).dateWithFoodsDao
         super.onCreate(savedInstanceState)
         setContent {
             FoodCalorieAppTheme {
-                AddFoodScreen(viewModel = appViewModel)
+                val currentDate = intent.getStringExtra("CURRENT_DATE")
+                Log.d("Testing", currentDate.toString())
+                AddFoodScreen(viewModel = appViewModel, dateWithFoodsDao = dao, currentDate)
             }
         }
     }
@@ -73,8 +88,9 @@ class AddFoodActivity : ComponentActivity() {
 
 
 @Composable
-fun AddFoodScreen(viewModel: AppViewModel) {
+fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, currentDate: String?) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var searchKey by remember { mutableStateOf("") }  // Variable for search term
     val focusManager = LocalFocusManager.current
@@ -158,7 +174,7 @@ fun AddFoodScreen(viewModel: AppViewModel) {
             // If no food item is found we launch an activity allowing for manually'
             // inputting the food yeah.
             if (viewModel.name == "No item found") {
-                launchAddNutritionActivity(context, searchKey)
+                launchAddNutritionActivity(context, searchKey, currentDate)
                 viewModel.name = "<Empty>"
             }
         }
@@ -166,7 +182,27 @@ fun AddFoodScreen(viewModel: AppViewModel) {
         // If API query does not result in "No item found" and it is not empty,
         // we show the 'Add food' button allowing for adding to the log.
         if (viewModel.name != "No item found" && viewModel.name != "<Empty>") {
-            Button(onClick = { /*TODO*/ }, modifier = Modifier.padding(bottom = 10.dp)) {
+            Button(onClick = {
+                val currentDateToAdd: String  = currentDate!!  // Current date passed from intent
+                val foodNameToAdd: String = viewModel.name!!
+                val foodCaloriesToAdd: Double = viewModel.calories!!
+                val foodFatToAdd: Double = viewModel.fat!!
+                val foodProteinToAdd: Double = viewModel.protein!!
+                val foodCarbsToAdd: Double = viewModel.carbs!!
+
+                // When clicking 'Add Food' we add the corresponding data to the database.
+                /* ------------------------------------------------------------------------------------------- */
+                val dateToInsert = Date(currentDateToAdd)
+                val foodToInsert = Food(name = foodNameToAdd, calories = foodCaloriesToAdd, fat = foodFatToAdd,
+                    protein = foodProteinToAdd, carbs = foodCarbsToAdd, dateString = currentDateToAdd)
+
+                scope.launch {
+                    dateWithFoodsDao.insertDate(dateToInsert)
+                    dateWithFoodsDao.insertFood(foodToInsert)
+                }
+                /* ------------------------------------------------------------------------------------------- */
+
+            }, modifier = Modifier.padding(bottom = 10.dp)) {
                 Text(text = "Add Food")
             }
         }
@@ -184,8 +220,9 @@ fun AddFoodScreen(viewModel: AppViewModel) {
 }
 
 
-private fun launchAddNutritionActivity(context: Context, searchKey: String) {
+private fun launchAddNutritionActivity(context: Context, searchKey: String, currentDate: String?) {
     val intent = Intent(context, AddNutritionActivity::class.java)
     intent.putExtra("INVALID_FOOD_NAME", searchKey)
+    intent.putExtra("CURRENT_DATE", currentDate)
     context.startActivity(intent)
 }

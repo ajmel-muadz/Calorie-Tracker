@@ -47,7 +47,6 @@ class AppViewModel : ViewModel() {
 
     // Function to perform the network call.
     fun fetchItems(searchQuery: String) {
-        //_loading.value = true
         loading = true
 
         viewModelScope.launch {
