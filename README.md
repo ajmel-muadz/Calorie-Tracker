@@ -8,13 +8,12 @@
 - If invalid, i.e. the food is not in the database, users can manually
   enter food.
 
-Currently working on the database functionality. Ideally, we need
-to make sure to store food data in the database **first**, then we think
-about retrieving data from the database and displaying it. Much easier
-that way.
+Currently the database is fully working. It is basically a One-to-Many
+database, where one Date in the app can have many food entries.
+
+Now currently working on displaying food info.
 
 ### Stuff we have not done yet
 
 - We have not done the Firebase stuff.
 - We have not done photo uploading (related to the Firebase funcionality).
-- Have not displayed daily food info. This requires the database to be done.
