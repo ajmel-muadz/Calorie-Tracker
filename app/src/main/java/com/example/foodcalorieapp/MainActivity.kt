@@ -8,6 +8,9 @@
 
 // Below link helped with updating title in Date Picker when using previous/next arrows.
 // 3. https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#DatePicker(androidx.compose.material3.DatePickerState,androidx.compose.ui.Modifier,androidx.compose.material3.DatePickerFormatter,kotlin.Function0,kotlin.Function0,kotlin.Boolean,androidx.compose.material3.DatePickerColors)
+
+// Below link helped with using suspend functions in composables not tied to a button click.
+// 4. https://developer.android.com/develop/ui/compose/side-effects#launchedeffect
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
@@ -37,9 +40,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +56,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 
 // Constants are defined here.
@@ -64,24 +70,29 @@ class MainActivity : ComponentActivity() {
     private val appViewModel: AppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val dao = AppDatabase.getInstance(this).dateWithFoodsDao
         super.onCreate(savedInstanceState)
         setContent {
             FoodCalorieAppTheme {
-                MainApp(viewModel = appViewModel)
+                var returnCurrentDate = intent.getStringExtra("RETURN_CURRENT_DATE")
+                if (returnCurrentDate != null) {
+                    appViewModel.formattedDate = returnCurrentDate
+                }
+                MainApp(viewModel = appViewModel, dateWithFoodsDao = dao)
             }
         }
     }
 }
 
 @Composable
-fun MainApp(viewModel: AppViewModel) {
+fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BACKGROUND_COLOUR)
     ) {
         // Composable which contains day switcher
-        DaySwitcher(viewModel)
+        DaySwitcher(viewModel, dateWithFoodsDao)
 
         // Button used to add food.
         SearchFoodButton(viewModel)
@@ -125,7 +136,9 @@ fun NextDay(viewModel: AppViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DaySwitcher(viewModel: AppViewModel) {
+fun DaySwitcher(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
+    val scope = rememberCoroutineScope()
+
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = viewModel.calendarDate.timeInMillis)
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -162,9 +175,8 @@ fun DaySwitcher(viewModel: AppViewModel) {
                     TextButton(onClick = {
                         viewModel.calendarDate.timeInMillis = datePickerState.selectedDateMillis!!
                         val formattedDate = SimpleDateFormat.getDateInstance().format(viewModel.calendarDate.timeInMillis)
-                        showDatePicker = false
-
                         viewModel.formattedDate = formattedDate
+                        showDatePicker = false
                     }) {
                         Text("OK")
                     }
@@ -183,6 +195,13 @@ fun DaySwitcher(viewModel: AppViewModel) {
         // This one line is responsible for allowing the date in the date picker to be
         // synchronised with when the arrow is clicked.
         datePickerState.selectedDateMillis = viewModel.calendarDate.timeInMillis
+    }
+
+    LaunchedEffect(viewModel.formattedDate) {
+        scope.launch {
+            Log.d("Testing", viewModel.formattedDate)
+            Log.d("Testing", dateWithFoodsDao.getFoodsWithDate(viewModel.formattedDate).toString())
+        }
     }
 }
 

@@ -6,6 +6,8 @@
 
 package com.example.foodcalorieapp
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -50,7 +52,6 @@ import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
 import kotlinx.coroutines.launch
 
 class AddNutritionActivity : ComponentActivity() {
-
     private val appViewModel: AppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -217,12 +218,14 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
             && viewModel.carbs != null) {
             Button(onClick = {
                 val currentDateToAdd: String = currentDate!!  // Current date passed from intent
-                val foodNameToAdd: String = viewModel.name!!
+                val foodNameToAdd: String = (viewModel.name!!).replaceFirstChar { it.uppercase() }  // Capitalise food name
                 val foodCaloriesToAdd: Double = viewModel.calories!!
                 val foodFatToAdd: Double = viewModel.fat!!
                 val foodProteinToAdd: Double = viewModel.protein!!
                 val foodCarbsToAdd: Double = viewModel.carbs!!
 
+                // When clicking 'Add Food' we add the corresponding data to the database.
+                /* ------------------------------------------------------------------------------------------- */
                 val dateToInsert = Date(currentDateToAdd)
                 val foodToInsert = Food(name = foodNameToAdd, calories = foodCaloriesToAdd, fat = foodFatToAdd,
                     protein = foodProteinToAdd, carbs = foodCarbsToAdd, dateString = currentDateToAdd)
@@ -231,10 +234,21 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
                     dateWithFoodsDao.insertDate(dateToInsert)
                     dateWithFoodsDao.insertFood(foodToInsert)
                 }
+                /* ------------------------------------------------------------------------------------------- */
+
+                // Go back to main screen when we add food.
+                launchMainActivity(context, currentDateToAdd)
 
             }, modifier = Modifier.padding(bottom = 10.dp)) {
                 Text(text = "Add New Food")
             }
         }
     }
+}
+
+
+private fun launchMainActivity(context: Context, returnCurrentDate: String?) {
+    val intent = Intent(context, MainActivity::class.java)
+    intent.putExtra("RETURN_CURRENT_DATE", returnCurrentDate)
+    context.startActivity(intent)
 }
