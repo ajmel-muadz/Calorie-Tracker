@@ -1,19 +1,27 @@
-## PLEASE READ THIS
+# PLEASE READ THIS
 
-### I will use this file to relay any updates. So far:
+***
+## This README is used to relay any updates in the project. So far:
 
-- Added a very simple menu.
-- Ability to choose dates if you click on the date at the top screen.
-- Added API calls functionality. It will retrieve food data if valid.
-- If invalid, i.e. the food is not in the database, users can manually
-  enter food.
+- When opening the app, you are shown the current date at the top. Users can add food with the button at the bottom.
+- Foods are added via an API call to calorieninjas.com and displayed in a list at the front screen corresponding to the date.
+- If a food does not exist, users can manually enter the food.
+- All foods entered are stored in a Room database. Food lists are mapped to each date shown on the screen.
+  The date to food mapping is a One-to-Many relationship.
+***
 
-Currently the database is fully working. It is basically a One-to-Many
-database, where one Date in the app can have many food entries.
+***
+## Stuff not done yet
 
-Now currently working on displaying food info.
+### Major
 
-### Stuff we have not done yet
+- We need to make the photos stuff work. So users can take a photo of their food and attach it to a food in the list.
+- Need to make this app work with Firebase.
 
-- We have not done the Firebase stuff.
-- We have not done photo uploading (related to the Firebase funcionality).
+## Minor
+- Need to allow users to enter meal type (such as breakfast, lunch, dinner).
+- Need to allow users to enter the amount of grams for their food (portion size). This is fairly trivial.
+- Need to show for each food list a summary of the total calories, fat, protein and carbs for the day.
+- Currently, users can only see the kcals (calories) for each food in the list. Ideally, if the user clicks on any food
+  card it should show all macros, not just the calories.
+***
