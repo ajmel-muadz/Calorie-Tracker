@@ -55,8 +55,8 @@ data class DateWithFoods(
 @Dao
 interface DateWithFoodsDao {
     @Transaction
-    @Query("SELECT * FROM Date WHERE dateString = :dateString")
-    suspend fun getDateWithFoods(dateString: String): List<DateWithFoods>
+    @Query("SELECT * FROM Food WHERE dateString = :dateString")
+    suspend fun getFoodsWithDate(dateString: String): List<Food>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDate(date: Date)

@@ -12,7 +12,7 @@
 // Below link helped with clearing TextField focus when search icon is clicked.
 // 4. https://stackoverflow.com/questions/67058630/how-clear-focus-for-basictextfield-in-jetpack-compose
 
-// Below link helped with calling suspend functions inside composables.
+// Below link helped with calling suspend functions inside composables tied to a button click.
 // 5. https://developer.android.com/develop/ui/compose/side-effects#:~:text=To%20perform%20work%20over%20the,if%20LaunchedEffect%20leaves%20the%20composition.
 /* -------------------------------------------------------------------------------- */
 
@@ -60,14 +60,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.LifecycleCoroutineScope
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 class AddFoodActivity : ComponentActivity() {
@@ -79,8 +72,8 @@ class AddFoodActivity : ComponentActivity() {
         setContent {
             FoodCalorieAppTheme {
                 val currentDate = intent.getStringExtra("CURRENT_DATE")
-                Log.d("Testing", currentDate.toString())
-                AddFoodScreen(viewModel = appViewModel, dateWithFoodsDao = dao, currentDate)
+                val currentDateTimeInMillis = intent.getLongExtra("CURRENT_DATE_TIME_IN_MILLIS", 0)
+                AddFoodScreen(viewModel = appViewModel, dateWithFoodsDao = dao, currentDate, currentDateTimeInMillis)
             }
         }
     }
@@ -88,7 +81,7 @@ class AddFoodActivity : ComponentActivity() {
 
 
 @Composable
-fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, currentDate: String?) {
+fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, currentDate: String?, currentDateTimeInMillis: Long) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -174,7 +167,7 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
             // If no food item is found we launch an activity allowing for manually'
             // inputting the food yeah.
             if (viewModel.name == "No item found") {
-                launchAddNutritionActivity(context, searchKey, currentDate)
+                launchAddNutritionActivity(context, searchKey, currentDate, currentDateTimeInMillis)
                 viewModel.name = "<Empty>"
             }
         }
@@ -184,7 +177,7 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
         if (viewModel.name != "No item found" && viewModel.name != "<Empty>") {
             Button(onClick = {
                 val currentDateToAdd: String  = currentDate!!  // Current date passed from intent
-                val foodNameToAdd: String = viewModel.name!!
+                val foodNameToAdd: String = (viewModel.name!!).replaceFirstChar { it.uppercase() }  // Capitalise food name
                 val foodCaloriesToAdd: Double = viewModel.calories!!
                 val foodFatToAdd: Double = viewModel.fat!!
                 val foodProteinToAdd: Double = viewModel.protein!!
@@ -201,6 +194,9 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
                     dateWithFoodsDao.insertFood(foodToInsert)
                 }
                 /* ------------------------------------------------------------------------------------------- */
+
+                // Go back to main screen when we add food.
+                launchMainActivity(context, currentDateToAdd, currentDateTimeInMillis)
 
             }, modifier = Modifier.padding(bottom = 10.dp)) {
                 Text(text = "Add Food")
@@ -220,9 +216,17 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
 }
 
 
-private fun launchAddNutritionActivity(context: Context, searchKey: String, currentDate: String?) {
+private fun launchAddNutritionActivity(context: Context, searchKey: String, currentDate: String?, currentDateTimeInMillis: Long) {
     val intent = Intent(context, AddNutritionActivity::class.java)
     intent.putExtra("INVALID_FOOD_NAME", searchKey)
     intent.putExtra("CURRENT_DATE", currentDate)
+    intent.putExtra("CURRENT_DATE_TIME_IN_MILLIS", currentDateTimeInMillis)
+    context.startActivity(intent)
+}
+
+private fun launchMainActivity(context: Context, returnCurrentDate: String?, returnCurrentDateTimeInMillis: Long) {
+    val intent = Intent(context, MainActivity::class.java)
+    intent.putExtra("RETURN_CURRENT_DATE", returnCurrentDate)
+    intent.putExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", returnCurrentDateTimeInMillis)
     context.startActivity(intent)
 }
