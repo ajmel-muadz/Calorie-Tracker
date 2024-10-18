@@ -14,26 +14,43 @@
 
 // Below link helped with calling suspend functions inside composables tied to a button click.
 // 5. https://developer.android.com/develop/ui/compose/side-effects#:~:text=To%20perform%20work%20over%20the,if%20LaunchedEffect%20leaves%20the%20composition.
+
+// Below link helped with adding data to Firebase Firestore.
+//6. https://www.geeksforgeeks.org/android-jetpack-compose-add-data-to-firebase-firestore/
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -46,6 +63,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,8 +79,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import coil.compose.rememberAsyncImagePainter
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
 import kotlinx.coroutines.launch
+import java.io.File
 
 class AddFoodActivity : ComponentActivity() {
     private val appViewModel: AppViewModel by viewModels()
@@ -82,13 +104,48 @@ class AddFoodActivity : ComponentActivity() {
 
 
 @Composable
-fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, currentDate: String?, currentDateTimeInMillis: Long) {
+fun AddFoodScreen(
+    viewModel: AppViewModel,
+    dateWithFoodsDao: DateWithFoodsDao,
+    currentDate: String?,
+    currentDateTimeInMillis: Long
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     var searchKey by remember { mutableStateOf("") }  // Variable for search term
+
+    val expand = remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    var captureImageUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
+    var newFile: File? = null
+
+    var showImageBox by remember { mutableStateOf(false) }  // State variable to control image Box display
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success) {
+            val imageByteArray = newFile?.readBytes()
+
+            if (imageByteArray != null) {
+                viewModel.addMealToFirebase(imageByteArray, context)
+            }
+            showImageBox = true  // Show the image Box after capturing the image
+        }
+    }
+
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+            if (it) {
+                Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
+                cameraLauncher.launch(captureImageUri)
+            } else {
+                Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
 
     Column(
         modifier = Modifier
@@ -99,7 +156,7 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
         // TextField for searching for food.
         /* --------------------------------------------------------------------------- */
         TextField(
-            value = searchKey, 
+            value = searchKey,
             onValueChange = { searchKey = it },
             label = { Text(text = "Search Food") },
             colors = TextFieldDefaults.colors(
@@ -126,9 +183,10 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
         )
         /* --------------------------------------------------------------------------- */
 
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier
+                .weight(1f),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Show loading indicator when searching for food.
             if (viewModel.loading) {
@@ -148,16 +206,62 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
                     Column(
                         modifier = Modifier.padding(10.dp)
                     ) {
-                        viewModel.name?.let { Text(text = "Name: $it", fontSize = 20.sp, color = Color.White, fontWeight = FontWeight.Bold) }
-                        viewModel.servingSize?.let { Text(text = "Serving size: $it", fontSize = 20.sp, color = Color.White, fontWeight = FontWeight.Bold) }
-                        viewModel.calories?.let { Text(text = "Calories: $it", fontSize = 20.sp, color = Color.White, fontWeight = FontWeight.Bold) }
-                        viewModel.fat?.let { Text(text = "Fat: $it", fontSize = 20.sp, color = Color.White, fontWeight = FontWeight.Bold) }
-                        viewModel.protein?.let { Text(text = "Protein: $it", fontSize = 20.sp, color = Color.White, fontWeight = FontWeight.Bold) }
-                        viewModel.carbs?.let { Text(text = "Carbs: $it", fontSize = 20.sp, color = Color.White, fontWeight = FontWeight.Bold) }
+                        viewModel.name?.let {
+                            Text(
+                                text = "Name: $it",
+                                fontSize = 20.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        viewModel.servingSize?.let {
+                            Text(
+                                text = "Serving size: $it",
+                                fontSize = 20.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        viewModel.calories?.let {
+                            Text(
+                                text = "Calories: $it",
+                                fontSize = 20.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        viewModel.fat?.let {
+                            Text(
+                                text = "Fat: $it",
+                                fontSize = 20.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        viewModel.protein?.let {
+                            Text(
+                                text = "Protein: $it",
+                                fontSize = 20.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        viewModel.carbs?.let {
+                            Text(
+                                text = "Carbs: $it",
+                                fontSize = 20.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
 
                         viewModel.errorMessage?.let {
                             if (it.isNotEmpty()) {
-                                Text(text = it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(10.dp))
+                                Text(
+                                    text = it,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.padding(10.dp)
+                                )
                             }
                         }
                     }
@@ -165,30 +269,137 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
             }
             /* -------------------------------------------------------------------------- */
 
-            // If no food item is found we launch an activity allowing for manually'
-            // inputting the food yeah.
+            // Display the image Box when an image is captured
+            if (showImageBox) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .padding(10.dp)
+                        .background(Color.Gray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (captureImageUri != Uri.EMPTY) {
+                        Image(
+                            painter = rememberAsyncImagePainter(captureImageUri),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Text(text = "No image selected")
+                    }
+                }
+            }
+
+            // If no food item is found we launch an activity allowing for manual input.
             if (viewModel.name == "No item found") {
-                launchAddNutritionActivity(context, searchKey, currentDate, currentDateTimeInMillis)
+                launchAddNutritionActivity(
+                    context,
+                    searchKey,
+                    currentDate,
+                    currentDateTimeInMillis
+                )
                 viewModel.name = "<Empty>"
             }
         }
 
-        // If API query does not result in "No item found" and it is not empty,
-        // we show the 'Add food' button allowing for adding to the log.
+        IconButton(onClick = {
+            focusManager.clearFocus()  // Clear cursor focus.
+            keyboardController?.hide()
+
+            showDialog = true
+        }) {
+            Icon(
+                imageVector = Icons.Default.Image,
+                contentDescription = "Edit a food's properties.",
+            )
+        }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showDialog = false
+                },
+                title = {
+                    Text(
+                        text = "        Choose an Action",
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Button(
+                                onClick = {
+                                    showDialog = false
+
+                                    newFile = context.createImageFile(viewModel.name)
+                                    captureImageUri = FileProvider.getUriForFile(
+                                        context,
+                                        context.packageName + ".provider",
+                                        newFile!!
+                                    )
+
+                                    val permissionCheckResult = ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.CAMERA
+                                    )
+                                    if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
+                                        cameraLauncher.launch(captureImageUri)
+                                    } else {
+                                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .padding(bottom = 10.dp)
+                                    .padding(top = 20.dp)
+                            ) {
+                                Text("Open Camera")
+                            }
+                        }
+                        Button(
+                            onClick = {
+                                // Action for "Select From Gallery" button
+                            },
+                            modifier = Modifier
+                                .padding(bottom = 10.dp)
+                        ) {
+                            Text("Select From Gallery")
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {}
+            )
+        }
+
+        // Show the 'Add Food' button if appropriate.
         if (viewModel.name != "No item found" && viewModel.name != "<Empty>") {
             Button(onClick = {
-                val currentDateToAdd: String  = currentDate!!  // Current date passed from intent
-                val foodNameToAdd: String = (viewModel.name!!).replaceFirstChar { it.uppercase() }  // Capitalise food name
+                val currentDateToAdd: String = currentDate!!  // Current date passed from intent
+                val foodNameToAdd: String =
+                    (viewModel.name!!).replaceFirstChar { it.uppercase() }  // Capitalize food name
                 val foodCaloriesToAdd: Double = viewModel.calories!!
                 val foodFatToAdd: Double = viewModel.fat!!
                 val foodProteinToAdd: Double = viewModel.protein!!
                 val foodCarbsToAdd: Double = viewModel.carbs!!
 
-                // When clicking 'Add Food' we add the corresponding data to the database.
+                // Add the corresponding data to the database.
                 /* ------------------------------------------------------------------------------------------- */
                 val dateToInsert = Date(currentDateToAdd)
-                val foodToInsert = Food(name = foodNameToAdd, calories = foodCaloriesToAdd, fat = foodFatToAdd,
-                    protein = foodProteinToAdd, carbs = foodCarbsToAdd, dateString = currentDateToAdd)
+                val foodToInsert = Food(
+                    name = foodNameToAdd,
+                    calories = foodCaloriesToAdd,
+                    fat = foodFatToAdd,
+                    protein = foodProteinToAdd,
+                    carbs = foodCarbsToAdd,
+                    dateString = currentDateToAdd
+                )
 
                 scope.launch {
                     dateWithFoodsDao.insertDate(dateToInsert)
@@ -212,6 +423,49 @@ fun AddFoodScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, c
                     color = MaterialTheme.colorScheme.error
                 )
             }
+        }
+    }
+}
+
+
+@Composable
+fun imagePicker(onImageSelected: (Uri) -> Unit){
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let { onImageSelected(it) }
+        }
+    )
+    Button(
+        onClick = { launcher.launch("image/*") }
+    ) {
+        Text("Select Image")
+    }
+
+}
+
+@Composable
+fun getImageFromCamera() {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val context = LocalContext.current
+
+    var captureImageUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
+    val capturedImagesUriList = remember { mutableStateListOf<Uri>() }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()){ success ->
+        if (success){
+            capturedImagesUriList.add(captureImageUri)
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()){
+        if (it){
+            Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
+            cameraLauncher.launch(captureImageUri)
+        } else {
+            Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
         }
     }
 }

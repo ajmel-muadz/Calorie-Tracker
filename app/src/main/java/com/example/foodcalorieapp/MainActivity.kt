@@ -23,7 +23,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -48,7 +47,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
@@ -59,7 +57,6 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -86,13 +83,12 @@ import androidx.core.content.ContextCompat
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Objects
 import coil.annotation.ExperimentalCoilApi
 import java.io.File
-import java.util.Date
 import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
 import android.Manifest
+import android.os.Environment
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.runtime.mutableStateListOf
 
@@ -160,7 +156,7 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 val foodProtein = food.protein
                 val foodCarbs = food.carbs
 
-                val foodToAdd = FoodDisplay(name = foodName, calories = foodCalories,
+                val foodToAdd = FoodDisplay(name = foodName, 100.0, calories = foodCalories,
                     fat = foodFat, protein = foodProtein, carbs = foodCarbs)
 
                 foodsToDisplay.add(foodToAdd)
@@ -177,28 +173,6 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
 @OptIn(ExperimentalCoilApi::class)
 @Composable
 fun SingleFood(foodDisplay: FoodDisplay) {
-    val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    val context = LocalContext.current
-
-    var captureImageUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
-    val capturedImagesUriList = remember { mutableStateListOf<Uri>() }
-
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()){ success ->
-        if (success){
-            capturedImagesUriList.add(captureImageUri)
-        }
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()){
-        if (it){
-            Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
-            cameraLauncher.launch(captureImageUri)
-        } else {
-            Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     Card(
         modifier = Modifier
@@ -243,49 +217,6 @@ fun SingleFood(foodDisplay: FoodDisplay) {
                         contentDescription = "Edit a food's properties.",
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .clickable { },
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(onClick = {
-                        focusManager.clearFocus()  // Clear cursor focus.
-                        keyboardController?.hide()
-
-                        val newFile = context.createImageFile(foodDisplay.name)
-                        captureImageUri = FileProvider.getUriForFile(
-                            context,
-                            context.packageName + ".provider",
-                            newFile
-                        )
-                        Toast.makeText(context, "$captureImageUri", Toast.LENGTH_SHORT).show()
-
-                        val permissionCheckResult = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
-                        if(permissionCheckResult == PackageManager.PERMISSION_GRANTED){
-                            cameraLauncher.launch(captureImageUri)
-                        } else {
-                            permissionLauncher.launch(Manifest.permission.CAMERA)
-                        }
-
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Image,
-                            contentDescription = "Edit a food's properties.",
-                        )
-                    }
-
-                    if(capturedImagesUriList.isNotEmpty()){
-                        capturedImagesUriList.forEach{ uri ->
-                            Image(
-                                modifier = Modifier.padding(16.dp, 8.dp),
-                                painter = rememberAsyncImagePainter(uri),
-                                contentDescription = null
-                            )
-                        }
-                    }
-                }
-
                 Box(
                     modifier = Modifier
                         .size(50.dp)
@@ -409,11 +340,17 @@ fun DaySwitcher(viewModel: AppViewModel) {
     }
 }
 
-fun Context.createImageFile(name: String): File {
-    // create an image file name
-    val imageFileName = "JPEG_" + name + "_"
+fun Context.createImageFile(name: String?): File {
+    // create or get a directory to store the images
+    val imageDirectory = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "food_images")
+
+    // If the directory doesn't exist, create it
+    if (!imageDirectory.exists()) {
+        imageDirectory.mkdirs()  // Create the directory
+    }
+
     val image = File.createTempFile(
-        imageFileName,
+        name,
         ".jpg",
         externalCacheDir
     )
