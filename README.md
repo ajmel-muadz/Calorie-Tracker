@@ -16,6 +16,7 @@
 ### Major
 
 - We need to make the photos stuff work. So users can take a photo of their food and attach it to a food in the list.
+  - Mouktada: I made a icon button in the main page to allow the user to take a photo. It returns a specific Uri for the photo.
 - Need to make this app work with Firebase.
 
 ## Minor

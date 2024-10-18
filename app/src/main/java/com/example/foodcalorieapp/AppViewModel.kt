@@ -1,11 +1,26 @@
+// Credits...
+/* -------------------------------------------------------------------------------- */
+// Used to help me create a firebase database.
+// 1. https://www.geeksforgeeks.org/android-jetpack-compose-add-data-to-firebase-firestore/
+/* -------------------------------------------------------------------------------- */
+
 package com.example.foodcalorieapp
 
+import android.content.Context
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -15,6 +30,11 @@ import java.util.Date
 class AppViewModel : ViewModel() {
     var calendarDate by mutableStateOf<Calendar>(Calendar.getInstance())
     var formattedDate by mutableStateOf<String>(SimpleDateFormat.getDateInstance().format(Date()))
+
+    private var _carList = MutableStateFlow<List<Food>>(emptyList())
+    var carList = _carList.asStateFlow()
+
+    var selectedImageUri by mutableStateOf<Uri?>(null)
 
     fun incrementDate() {
         val currentDate = this.calendarDate
@@ -73,5 +93,29 @@ class AppViewModel : ViewModel() {
             }
         }
     }
+
+    fun addMealToFirebase(imageByteArray: ByteArray, context: Context){
+        // on below line creating an instance of firebase firestore.
+        val db : FirebaseFirestore = FirebaseFirestore.getInstance()
+        //creating a collection reference for our Firebase Firestore database.
+        val dbMeals: CollectionReference = db.collection("MealImage")
+        //adding our data to our courses object class.
+        val mealImage = MealImage(imageByteArray)
+
+        //below method is use to add data to Firebase Firestore.
+        dbMeals.add(mealImage).addOnSuccessListener {
+            Toast.makeText(
+                context,
+                "Your Meal has been added to Firebase Firestore",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+//    fun getMealsList(){
+//
+//
+//
+//    }
     /* -------------------------------------------------------------------------------------- */
 }
