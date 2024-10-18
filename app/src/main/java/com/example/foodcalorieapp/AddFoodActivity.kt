@@ -498,6 +498,14 @@ val mockDateWithFoodsDao = object : DateWithFoodsDao {
     override suspend fun insertFood(food: Food) {
         // Do nothing
     }
+
+    override suspend fun updateFood(food: Food) {
+        // Do nothing
+    }
+
+    override suspend fun deleteFood(food: Food) {
+        // Do nothing
+    }
 }
 
 

@@ -26,6 +26,9 @@
             android:exported="false"
             android:label="@string/title_activity_add_food"
             android:theme="@style/Theme.FoodCalorieApp" />
+
+        <activity android:name=".EditFoodActivity"></activity>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

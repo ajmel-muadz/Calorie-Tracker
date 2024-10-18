@@ -92,6 +92,7 @@ import android.os.Environment
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.CoroutineScope
 
 
 // Constants are defined here.
@@ -124,6 +125,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current;
 
     Column(
         modifier = Modifier
@@ -163,7 +165,12 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 foodsToDisplay.add(foodToAdd)
             }
 
-            FoodList(foodDisplays = foodsToDisplay, modifier = Modifier.weight(1f))
+            FoodList(
+                foodDisplays = foodsToDisplay,
+                modifier = Modifier.weight(1f),
+                onEditClicked = { handleEditFood(it, context) },
+                onDeleteClicked = { handleDeleteFood(it, scope, dateWithFoodsDao) }
+            )
         }
         /* ----------------------------------------------------------------------------- */
 
@@ -175,7 +182,9 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
-fun SingleFood(foodDisplay: FoodDisplay) {
+fun SingleFood(foodDisplay: FoodDisplay,
+               onEditClicked: (FoodDisplay) -> Unit,
+               onDeleteClicked: (FoodDisplay) -> Unit) {
 
     Card(
         modifier = Modifier
@@ -212,7 +221,7 @@ fun SingleFood(foodDisplay: FoodDisplay) {
                 Box(
                     modifier = Modifier
                         .size(50.dp)
-                        .clickable { },
+                        .clickable { onEditClicked(foodDisplay) },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -223,7 +232,7 @@ fun SingleFood(foodDisplay: FoodDisplay) {
                 Box(
                     modifier = Modifier
                         .size(50.dp)
-                        .clickable { },
+                        .clickable { onDeleteClicked(foodDisplay) },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -238,13 +247,61 @@ fun SingleFood(foodDisplay: FoodDisplay) {
 
 
 @Composable
-fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier) {
+fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier,
+             onEditClicked: (FoodDisplay) -> Unit, onDeleteClicked: (FoodDisplay) -> Unit) {
     LazyColumn(modifier = modifier) {
         items(foodDisplays) { foodDisplay: FoodDisplay ->
-            SingleFood(foodDisplay = foodDisplay)
+            SingleFood(
+
+                foodDisplay = foodDisplay,
+                onEditClicked = onEditClicked,
+                onDeleteClicked = onDeleteClicked)
+
+
         }
     }
 }
+
+fun handleEditFood(foodDisplay: FoodDisplay, context: Context) {
+    launchEditFoodActivity(context, foodDisplay)
+}
+
+fun handleDeleteFood(foodDisplay: FoodDisplay, viewModelScope: CoroutineScope, dateWithFoodsDao: DateWithFoodsDao) {
+    viewModelScope.launch {
+        val food = convertToFood(foodDisplay)
+        dateWithFoodsDao.deleteFood(food)
+
+    }
+}
+
+
+private fun launchEditFoodActivity(context: Context, foodDisplay: FoodDisplay) {
+    val intent = Intent(context, EditFoodActivity::class.java)
+    intent.putExtra("FOOD_NAME", foodDisplay.name)
+    intent.putExtra("FOOD_CALORIES", foodDisplay.calories)
+    intent.putExtra("FOOD_FAT", foodDisplay.fat)
+    intent.putExtra("FOOD_PROTEIN", foodDisplay.protein)
+    intent.putExtra("FOOD_CARBS", foodDisplay.carbs)
+    context.startActivity(intent)
+}
+
+
+
+private fun convertToFood(foodDisplay: FoodDisplay): Food {
+    return Food(
+        name = foodDisplay.name,
+        calories = foodDisplay.calories,
+        fat = foodDisplay.fat,
+        protein = foodDisplay.protein,
+        carbs = foodDisplay.carbs,
+        dateString = "DateStringPlaceholder" // Replace this with the actual date if needed
+    )
+}
+
+
+
+
+
 
 @Composable
 fun PreviousDay(viewModel: AppViewModel) {
@@ -419,6 +476,13 @@ fun PreviewMainAppWithMockData() {
         }
 
         override suspend fun insertFood(food: Food) {
+            // No operation needed for preview
+        }
+        override suspend fun updateFood(food: Food) {
+            // No operation needed for preview
+        }
+
+        override suspend fun deleteFood(food: Food) {
             // No operation needed for preview
         }
     }

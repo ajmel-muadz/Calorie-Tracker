@@ -15,6 +15,7 @@ package com.example.foodcalorieapp
 import android.content.Context
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.Delete
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Insert
@@ -25,6 +26,7 @@ import androidx.room.Relation
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
+import androidx.room.Update
 
 @Entity(tableName = "Date")
 data class Date(
@@ -63,6 +65,12 @@ interface DateWithFoodsDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFood(food: Food)
+
+    @Update
+    suspend fun updateFood(food: Food)
+
+    @Delete
+    suspend fun deleteFood(food: Food)
 }
 
 @Database(

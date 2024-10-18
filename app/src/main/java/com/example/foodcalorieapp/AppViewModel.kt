@@ -28,6 +28,8 @@ import java.util.Calendar
 import java.util.Date
 
 class AppViewModel : ViewModel() {
+
+    //private val dateWithFoodsDao: DateWithFoodsDao = AppDatabase.getInstance().dateWithFoodsDao
     var calendarDate by mutableStateOf<Calendar>(Calendar.getInstance())
     var formattedDate by mutableStateOf<String>(SimpleDateFormat.getDateInstance().format(Date()))
 
@@ -47,6 +49,13 @@ class AppViewModel : ViewModel() {
         currentDate.add(Calendar.DAY_OF_MONTH, -1)
         this.formattedDate = SimpleDateFormat.getDateInstance().format(this.calendarDate.timeInMillis)
     }
+
+//    fun updateFood(food: Food) {
+//        viewModelScope.launch {
+//            dateWithFoodsDao.updateFood(food)
+//        }
+//    }
+
 
 
     // Anything contained in this code block is wholly responsible for API calls.
