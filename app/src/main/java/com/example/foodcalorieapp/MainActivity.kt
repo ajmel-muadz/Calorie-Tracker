@@ -11,16 +11,24 @@
 
 // Below link helped with using suspend functions in composables not tied to a button click.
 // 4. https://developer.android.com/develop/ui/compose/side-effects#launchedeffect
+
+// Below link helped me with prompting the image app and returning the image uri, triggered after clicking the image icon.
+// 5. https://medium.com/@dheerubhadoria/capturing-images-from-camera-in-android-with-jetpack-compose-a-step-by-step-guide-64cd7f52e5de
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,6 +48,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
@@ -49,6 +58,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -66,13 +76,26 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Objects
+import coil.annotation.ExperimentalCoilApi
+import java.io.File
+import java.util.Date
+import androidx.core.content.FileProvider
+import coil.compose.rememberAsyncImagePainter
+import android.Manifest
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.runtime.mutableStateListOf
+
 
 // Constants are defined here.
 /* ---------------------------------------------------------- */
@@ -151,9 +174,32 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
         SearchFoodButton(viewModel)
     }
 }
-
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun SingleFood(foodDisplay: FoodDisplay) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val context = LocalContext.current
+
+    var captureImageUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
+    val capturedImagesUriList = remember { mutableStateListOf<Uri>() }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()){ success ->
+        if (success){
+            capturedImagesUriList.add(captureImageUri)
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()){
+        if (it){
+            Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
+            cameraLauncher.launch(captureImageUri)
+        } else {
+            Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     Card(
         modifier = Modifier
             .padding(10.dp)
@@ -187,8 +233,9 @@ fun SingleFood(foodDisplay: FoodDisplay) {
             Row(
             ) {
                 Box(
-                    modifier = Modifier.size(50.dp)
-                        .clickable {  },
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clickable { },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -196,10 +243,53 @@ fun SingleFood(foodDisplay: FoodDisplay) {
                         contentDescription = "Edit a food's properties.",
                     )
                 }
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clickable { },
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(onClick = {
+                        focusManager.clearFocus()  // Clear cursor focus.
+                        keyboardController?.hide()
+
+                        val newFile = context.createImageFile(foodDisplay.name)
+                        captureImageUri = FileProvider.getUriForFile(
+                            context,
+                            context.packageName + ".provider",
+                            newFile
+                        )
+                        Toast.makeText(context, "$captureImageUri", Toast.LENGTH_SHORT).show()
+
+                        val permissionCheckResult = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                        if(permissionCheckResult == PackageManager.PERMISSION_GRANTED){
+                            cameraLauncher.launch(captureImageUri)
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Image,
+                            contentDescription = "Edit a food's properties.",
+                        )
+                    }
+
+                    if(capturedImagesUriList.isNotEmpty()){
+                        capturedImagesUriList.forEach{ uri ->
+                            Image(
+                                modifier = Modifier.padding(16.dp, 8.dp),
+                                painter = rememberAsyncImagePainter(uri),
+                                contentDescription = null
+                            )
+                        }
+                    }
+                }
 
                 Box(
-                    modifier = Modifier.size(50.dp)
-                        .clickable {  },
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clickable { },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -319,6 +409,16 @@ fun DaySwitcher(viewModel: AppViewModel) {
     }
 }
 
+fun Context.createImageFile(name: String): File {
+    // create an image file name
+    val imageFileName = "JPEG_" + name + "_"
+    val image = File.createTempFile(
+        imageFileName,
+        ".jpg",
+        externalCacheDir
+    )
+    return image
+}
 
 private fun launchAddFoodActivity(context: Context, viewModel: AppViewModel) {
     val intent = Intent(context, AddFoodActivity::class.java)

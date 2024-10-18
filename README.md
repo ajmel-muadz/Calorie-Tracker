@@ -25,3 +25,4 @@
 - Currently, users can only see the kcals (calories) for each food in the list. Ideally, if the user clicks on any food
   card it should show all macros, not just the calories.
 ***
+ 

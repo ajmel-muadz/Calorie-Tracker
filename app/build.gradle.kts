@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.foodcalorieapp"
-        minSdk = 24
+        minSdk = 21
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -68,10 +68,18 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation("androidx.compose.material:material-icons-extended-android:1.7.4")
+
     // API stuff
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
+
+    // Camera stuff
+    implementation("androidx.camera:camera-camera2:1.3.0-alpha04")
+    implementation("androidx.camera:camera-lifecycle:1.3.0-alpha04")
+    implementation("io.coil-kt:coil-compose:2.2.0")
+
 
     // Database stuff
     implementation("androidx.room:room-runtime:2.6.1")
