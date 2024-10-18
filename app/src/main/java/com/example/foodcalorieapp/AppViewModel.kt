@@ -31,7 +31,7 @@ class AppViewModel : ViewModel() {
     var calendarDate by mutableStateOf<Calendar>(Calendar.getInstance())
     var formattedDate by mutableStateOf<String>(SimpleDateFormat.getDateInstance().format(Date()))
 
-    private var _carList = MutableStateFlow<List<Food>>(emptyList())
+    public var _carList = MutableStateFlow<List<Food>>(emptyList())
     var carList = _carList.asStateFlow()
 
     var selectedImageUri by mutableStateOf<Uri?>(null)

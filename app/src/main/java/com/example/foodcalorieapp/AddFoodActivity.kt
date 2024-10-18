@@ -484,3 +484,43 @@ private fun launchMainActivity(context: Context, returnCurrentDate: String?, ret
     intent.putExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", returnCurrentDateTimeInMillis)
     context.startActivity(intent)
 }
+
+// Mock implementation for the preview, this should make it easier for us with using split screen
+val mockDateWithFoodsDao = object : DateWithFoodsDao {
+    override suspend fun getFoodsWithDate(dateString: String): List<Food> {
+        return listOf(Food(name = "Sample Food", calories = 100.0, fat = 5.0, protein = 3.0, carbs = 12.0, dateString = dateString))
+    }
+
+    override suspend fun insertDate(date: Date) {
+        // Do nothing
+    }
+
+    override suspend fun insertFood(food: Food) {
+        // Do nothing
+    }
+}
+
+
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewAddFoodScreen() {
+    val mockViewModel = AppViewModel().apply {
+        name = "Example Food"
+        calories = 200.0
+        fat = 10.0
+        protein = 5.0
+        carbs = 30.0
+    }
+
+    AddFoodScreen(
+        viewModel = mockViewModel,
+        dateWithFoodsDao = mockDateWithFoodsDao,
+        currentDate = "2024-10-18",
+        currentDateTimeInMillis = System.currentTimeMillis()
+    )
+}
+
+
+
+

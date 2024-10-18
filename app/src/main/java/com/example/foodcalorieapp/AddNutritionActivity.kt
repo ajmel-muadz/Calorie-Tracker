@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
@@ -64,6 +65,7 @@ class AddNutritionActivity : ComponentActivity() {
         }
     }
 }
+
 
 @Composable
 fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao,
@@ -250,3 +252,5 @@ private fun launchMainActivity(context: Context, returnCurrentDate: String?, ret
     intent.putExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", returnCurrentDateTimeInMillis)
     context.startActivity(intent)
 }
+
+
