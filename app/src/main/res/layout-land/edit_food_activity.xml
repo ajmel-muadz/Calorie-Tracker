@@ -1,98 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#ff2b2b2b"
     android:padding="16dp">
 
     <EditText
         android:id="@+id/editTextName"
-        android:layout_width="325dp"
-        android:layout_height="65dp"
+        android:layout_width="302dp"
+        android:layout_height="66dp"
+        android:layout_marginTop="8dp"
         android:hint="Food Name"
         android:inputType="text"
         android:textColor="@color/white"
         android:textColorHint="#7A7979"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
         android:id="@+id/editTextCalories"
-        android:layout_width="325dp"
+        android:layout_width="295dp"
         android:layout_height="65dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="40dp"
         android:hint="Calories"
         android:inputType="numberDecimal"
+
         android:textColor="@color/white"
         android:textColorHint="#7A7979"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/editTextCarbs"
+        app:layout_constraintEnd_toStartOf="@+id/editTextFat"
+        app:layout_constraintHorizontal_bias="0.565"
         app:layout_constraintStart_toStartOf="parent"
-
-        app:layout_constraintTop_toBottomOf="@id/editTextName" />
+        app:layout_constraintTop_toBottomOf="@+id/editTextName"
+        app:layout_constraintVertical_bias="0.0" />
 
     <EditText
         android:id="@+id/editTextFat"
-        android:layout_width="325dp"
+        android:layout_width="295dp"
         android:layout_height="65dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="116dp"
         android:hint="Fat"
         android:inputType="numberDecimal"
         android:textColor="@color/white"
         android:textColorHint="#7A7979"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editTextCalories" />
+        app:layout_constraintTop_toBottomOf="@+id/editTextName" />
 
     <EditText
         android:id="@+id/editTextProtein"
-        android:layout_width="325dp"
+        android:layout_width="295dp"
         android:layout_height="65dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="28dp"
+        android:layout_marginEnd="116dp"
         android:hint="Protein"
+
         android:inputType="numberDecimal"
         android:textColor="@color/white"
         android:textColorHint="#7A7979"
+        app:layout_constraintBottom_toTopOf="@+id/saveButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-
-        app:layout_constraintTop_toBottomOf="@id/editTextFat" />
+        app:layout_constraintTop_toBottomOf="@+id/editTextFat"
+        app:layout_constraintVertical_bias="0.0" />
 
     <EditText
         android:id="@+id/editTextCarbs"
-        android:layout_width="325dp"
+        android:layout_width="295dp"
         android:layout_height="65dp"
-        android:layout_marginTop="28dp"
+        android:layout_marginBottom="28dp"
         android:hint="Carbs"
         android:inputType="numberDecimal"
         android:textColor="@color/white"
         android:textColorHint="#7A7979"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editTextProtein" />
+        app:layout_constraintBottom_toTopOf="@+id/saveButton"
+        app:layout_constraintEnd_toStartOf="@+id/editTextProtein"
+        app:layout_constraintHorizontal_bias="0.633"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/saveButton"
         android:layout_width="267dp"
         android:layout_height="54dp"
-        android:layout_marginTop="48dp"
-        android:text="Save"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginBottom="24dp"
 
-        app:layout_constraintTop_toBottomOf="@id/editTextCarbs" />
+        android:text="Save"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/backButton"
+        app:layout_constraintHorizontal_bias="0.815"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/backButton"
         android:layout_width="141dp"
         android:layout_height="49dp"
-        android:layout_marginTop="20dp"
-        android:text="Back"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="88dp"
 
-        app:layout_constraintTop_toBottomOf="@id/saveButton" />
+        android:text="Back"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextProtein"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
