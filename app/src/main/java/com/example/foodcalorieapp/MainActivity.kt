@@ -14,6 +14,9 @@
 
 // Below link helped me with prompting the image app and returning the image uri, triggered after clicking the image icon.
 // 5. https://medium.com/@dheerubhadoria/capturing-images-from-camera-in-android-with-jetpack-compose-a-step-by-step-guide-64cd7f52e5de
+//
+// Below link helped make the expandable card to display more details.
+// 6. https://developer.android.com/codelabs/jetpack-compose-basics#6
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
@@ -88,9 +91,21 @@ import java.io.File
 import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
 import android.Manifest
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Environment
+import android.util.Base64
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.tooling.preview.Preview
 //import kotlin.coroutines.jvm.internal.CompletedContinuation.context
 
@@ -157,15 +172,15 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 val foodFat = food.fat
                 val foodProtein = food.protein
                 val foodCarbs = food.carbs
-
+                val foodId = food.id
 
                 val foodToAdd = FoodDisplay(name = foodName, 100.0, calories = foodCalories,
-                    fat = foodFat, protein = foodProtein, carbs = foodCarbs)
+                    fat = foodFat, protein = foodProtein, carbs = foodCarbs, id = foodId)
 
                 foodsToDisplay.add(foodToAdd)
             }
 
-            FoodList(foodDisplays = foodsToDisplay, modifier = Modifier.weight(1f))
+            FoodList(foodDisplays = foodsToDisplay, modifier = Modifier.weight(1f), viewModel)
         }
         /* ----------------------------------------------------------------------------- */
 
@@ -177,61 +192,173 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
-fun SingleFood(foodDisplay: FoodDisplay) {
+fun SingleFood(foodDisplay: FoodDisplay, viewModel: AppViewModel) {
+    val expanded = remember { mutableStateOf(false) }
+    val extraPadding by animateDpAsState(
+        if (expanded.value) 20.dp else 20.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
+
+    var decodedImage by remember { mutableStateOf<Bitmap?>(null) }
 
     Card(
         modifier = Modifier
             .padding(10.dp)
             .fillMaxWidth()
             .wrapContentHeight(),
-        shape = RoundedCornerShape(20)
+        shape = RoundedCornerShape(5)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                // Display food name.
-                Text(
-                    text = foodDisplay.name,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+        Column(
 
-                // Display food macros.
-                Text(
-                    text = "${foodDisplay.calories} kcal",
-                    fontSize = 12.sp
-                )
-            }
-
-            // Row for icons
+        ){
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = extraPadding.coerceAtLeast(0.dp)),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
+                Column(
                     modifier = Modifier
-                        .size(50.dp)
-                        .clickable { },
-                    contentAlignment = Alignment.Center
+                        .padding(start = 10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = "Edit a food's properties.",
-                    )
+                    if (!expanded.value) {
+                        // Display food name.
+                        Text(
+                            text = foodDisplay.name,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        // Display food macros.
+                        Text(
+                            text = "${foodDisplay.calories} kcal",
+                            fontSize = 12.sp
+                        )
+                    }else{
+                        Text(
+                            text = foodDisplay.name,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        Text(
+                            text = "${foodDisplay.servingSize}g serving size",
+                            fontSize = 12.sp
+                        )
+
+                        // Display food macros.
+                        Text(
+                            text = "${foodDisplay.calories} kcal",
+                            fontSize = 12.sp
+                        )
+
+                        // Display food macros.
+                        Text(
+                            text = "${foodDisplay.fat}g fat",
+                            fontSize = 12.sp
+                        )
+
+                        // Display food macros.
+                        Text(
+                            text = "${foodDisplay.protein}g protein",
+                            fontSize = 12.sp
+                        )
+
+                        // Display food macros.
+                        Text(
+                            text = "${foodDisplay.carbs}g carbs",
+                            fontSize = 12.sp
+                        )
+                    }
                 }
+
+                // Row for icons
+                Row(
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clickable { },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit a food's properties.",
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clickable { },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete a food from the day's log.",
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clickable { },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(onClick ={
+                            if(expanded.value){
+                                expanded.value = false
+                            }else{
+                                expanded.value = true
+                            }
+                        }) {
+                            if (expanded.value){
+                                Icon(
+                                    imageVector = Icons.Filled.KeyboardArrowUp,
+                                    contentDescription = "Search button for searching for food."
+                                )
+                            }else{
+                                Icon(
+                                    imageVector = Icons.Filled.KeyboardArrowDown,
+                                    contentDescription = "Search button for searching for food."
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            if (expanded.value) {
                 Box(
                     modifier = Modifier
-                        .size(50.dp)
-                        .clickable { },
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete a food from the day's log.",
-                    )
+                    LaunchedEffect(foodDisplay.id) {
+                        val imageString: String? = viewModel.getMealImageById(foodDisplay.id)
+
+                        if (!imageString.isNullOrEmpty()){
+                            val imageBytes = Base64.decode(imageString, Base64.DEFAULT)
+                            decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                        }
+                    }
+
+                    if (decodedImage != null){
+                        Image(
+                            bitmap = decodedImage!!.asImageBitmap(),
+                            contentDescription = "Captured Image",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .aspectRatio(2f)
+                        )
+                    } else {
+                        // Display a placeholder or loading indicator
+                        Text(
+                            text = "Loading image...",
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+
                 }
             }
         }
@@ -239,11 +366,12 @@ fun SingleFood(foodDisplay: FoodDisplay) {
 }
 
 
+
 @Composable
-fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier) {
+fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier, viewModel: AppViewModel) {
     LazyColumn(modifier = modifier) {
         items(foodDisplays) { foodDisplay: FoodDisplay ->
-            SingleFood(foodDisplay = foodDisplay)
+            SingleFood(foodDisplay = foodDisplay, viewModel = viewModel)
         }
     }
 }
@@ -345,23 +473,6 @@ fun DaySwitcher(viewModel: AppViewModel) {
     }
 }
 
-fun Context.createImageFile(name: String?): File {
-    // create or get a directory to store the images
-    val imageDirectory = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "food_images")
-
-    // If the directory doesn't exist, create it
-    if (!imageDirectory.exists()) {
-        imageDirectory.mkdirs()  // Create the directory
-    }
-
-    val image = File.createTempFile(
-        name,
-        ".jpg",
-        externalCacheDir
-    )
-    return image
-}
-
 private fun launchAddFoodActivity(context: Context, viewModel: AppViewModel) {
     val intent = Intent(context, AddFoodActivity::class.java)
     intent.putExtra("CURRENT_DATE", viewModel.formattedDate)
@@ -379,8 +490,6 @@ fun SearchFoodButton(viewModel: AppViewModel) {
         Text(text = "Search Food")
     }
 }
-
-
 
 // Similarly to the other Previews, trying to make a mock preview for this part
 @Composable
