@@ -107,7 +107,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.tooling.preview.Preview
-//import kotlin.coroutines.jvm.internal.CompletedContinuation.context
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 
 // Constants are defined here.
@@ -121,8 +122,14 @@ class MainActivity : ComponentActivity() {
     private val appViewModel: AppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val dao = AppDatabase.getInstance(this).dateWithFoodsDao
         super.onCreate(savedInstanceState)
+
+
+        appViewModel.setContext(this)
+
+        val dao = AppDatabase.getInstance(this).dateWithFoodsDao
+
+
         setContent {
             FoodCalorieAppTheme {
                 val returnCurrentDate = intent.getStringExtra("RETURN_CURRENT_DATE")
@@ -140,6 +147,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current;
 
     Column(
         modifier = Modifier
@@ -149,7 +157,7 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
     ) {
         // Composable which contains day switcher
         DaySwitcher(viewModel)
-        
+
         Spacer(modifier = Modifier.height(5.dp))  // Add some space between date switcher and list.
 
         // This code block is responsible for displaying the foods in a list.
@@ -180,7 +188,13 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 foodsToDisplay.add(foodToAdd)
             }
 
-            FoodList(foodDisplays = foodsToDisplay, modifier = Modifier.weight(1f), viewModel)
+
+            FoodList(
+                foodDisplays = foodsToDisplay,
+                modifier = Modifier.weight(1f),
+                onEditClicked = { handleEditFood(it, context, dateWithFoodsDao, viewModel) },
+                onDeleteClicked = { handleDeleteFood(it, context, scope, dateWithFoodsDao, viewModel) },
+                viewModel)
         }
         /* ----------------------------------------------------------------------------- */
 
@@ -192,7 +206,14 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
-fun SingleFood(foodDisplay: FoodDisplay, viewModel: AppViewModel) {
+fun SingleFood(foodDisplay: FoodDisplay,
+               onEditClicked: (FoodDisplay) -> Unit,
+               onDeleteClicked: (FoodDisplay) -> Unit,
+               viewModel: AppViewModel){
+
+
+    var decodedImage by remember { mutableStateOf<Bitmap?>(null) }
+
     val expanded = remember { mutableStateOf(false) }
     val extraPadding by animateDpAsState(
         if (expanded.value) 20.dp else 20.dp,
@@ -202,7 +223,6 @@ fun SingleFood(foodDisplay: FoodDisplay, viewModel: AppViewModel) {
         )
     )
 
-    var decodedImage by remember { mutableStateOf<Bitmap?>(null) }
 
     Card(
         modifier = Modifier
@@ -282,7 +302,7 @@ fun SingleFood(foodDisplay: FoodDisplay, viewModel: AppViewModel) {
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable { },
+                            .clickable { onEditClicked(foodDisplay) },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -293,7 +313,7 @@ fun SingleFood(foodDisplay: FoodDisplay, viewModel: AppViewModel) {
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable { },
+                            .clickable { onDeleteClicked (foodDisplay) },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -304,8 +324,6 @@ fun SingleFood(foodDisplay: FoodDisplay, viewModel: AppViewModel) {
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable { },
-                        contentAlignment = Alignment.Center
                     ) {
                         IconButton(onClick ={
                             if(expanded.value){
@@ -333,6 +351,7 @@ fun SingleFood(foodDisplay: FoodDisplay, viewModel: AppViewModel) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+
                 ) {
                     LaunchedEffect(foodDisplay.id) {
                         val imageString: String? = viewModel.getMealImageById(foodDisplay.id)
@@ -368,12 +387,79 @@ fun SingleFood(foodDisplay: FoodDisplay, viewModel: AppViewModel) {
 
 
 @Composable
-fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier, viewModel: AppViewModel) {
+fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier,
+             onEditClicked: (FoodDisplay) -> Unit, onDeleteClicked: (FoodDisplay) -> Unit,
+             viewModel: AppViewModel) {
     LazyColumn(modifier = modifier) {
         items(foodDisplays) { foodDisplay: FoodDisplay ->
-            SingleFood(foodDisplay = foodDisplay, viewModel = viewModel)
+            SingleFood(
+
+                foodDisplay = foodDisplay,
+                onEditClicked = onEditClicked,
+                onDeleteClicked = onDeleteClicked,
+                viewModel)
         }
     }
+}
+
+fun handleEditFood(foodDisplay: FoodDisplay, context: Context, dateWithFoodsDao: DateWithFoodsDao, viewModel: AppViewModel) {
+
+    val selectedDateString = viewModel.formattedDate
+
+    CoroutineScope(Dispatchers.Main).launch {
+
+        // Retrieving the Food item using the name and the selected date
+        val foodList = dateWithFoodsDao.getFoodsWithDate(selectedDateString)
+        val foodToEdit = foodList.find { it.name == foodDisplay.name }
+
+        foodToEdit?.let {
+            launchEditFoodActivity(context, it)
+        } ?: run {
+            Toast.makeText(context, "Food not found!", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
+
+
+fun handleDeleteFood(foodDisplay: FoodDisplay,context: Context, viewModelScope: CoroutineScope, dateWithFoodsDao: DateWithFoodsDao, viewModel: AppViewModel) {
+    val selectedDateString = viewModel.formattedDate
+
+    viewModelScope.launch {
+        val foodList = dateWithFoodsDao.getFoodsWithDate(selectedDateString)
+        val foodToDelete = foodList.find { it.name == foodDisplay.name }
+
+        foodToDelete?.let {
+            dateWithFoodsDao.deleteFood(it)
+            Toast.makeText(context, "Food deleted!", Toast.LENGTH_SHORT).show()
+        } ?: run {
+            Toast.makeText(context, "Food not found!", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
+private fun launchEditFoodActivity(context: Context, food: Food) {
+    val intent = Intent(context, EditFoodActivity::class.java).apply {
+        putExtra("FOOD_ID", food.id)
+        putExtra("FOOD_NAME", food.name)
+        putExtra("FOOD_CALORIES", food.calories)
+        putExtra("FOOD_FAT", food.fat)
+        putExtra("FOOD_PROTEIN", food.protein)
+        putExtra("FOOD_CARBS", food.carbs)
+        putExtra("CURRENT_DATE_STRING", food.dateString)
+    }
+    context.startActivity(intent)
+}
+
+private fun convertToFood(foodDisplay: FoodDisplay): Food {
+    return Food(
+        name = foodDisplay.name,
+        calories = foodDisplay.calories,
+        fat = foodDisplay.fat,
+        protein = foodDisplay.protein,
+        carbs = foodDisplay.carbs,
+        dateString = "DateStringPlaceholder" // Replace this with the actual date if needed
+    )
 }
 
 @Composable
@@ -516,12 +602,12 @@ fun PreviewMainAppWithMockData() {
         formattedDate = "2024-10-18"
     }
 
-    // The Mock Dao does not work for some reason however this should be enough
+    // Mock implementation of the DateWithFoodsDao
     val mockDao = object : DateWithFoodsDao {
         override suspend fun getFoodsWithDate(dateString: String): List<Food> {
             return listOf(
-                Food(name = "Apple", calories = 95.0, fat = 0.3, protein = 0.5, carbs = 25.0, dateString = dateString),
-                Food(name = "Banana", calories = 105.0, fat = 0.4, protein = 1.3, carbs = 27.0, dateString = dateString)
+                Food(id = 1, name = "Apple", calories = 95.0, fat = 0.3, protein = 0.5, carbs = 25.0, dateString = dateString),
+                Food(id = 2, name = "Banana", calories = 105.0, fat = 0.4, protein = 1.3, carbs = 27.0, dateString = dateString)
             )
         }
 
@@ -532,6 +618,18 @@ fun PreviewMainAppWithMockData() {
         override suspend fun insertFood(food: Food): Long {
             // No operation needed for preview
             return 1
+        }
+
+        override suspend fun getFoodByIdAndDate(id: Int, dateString: String): Food? {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun updateFood(food: Food) {
+            // No operation needed for preview
+        }
+
+        override suspend fun deleteFood(food: Food) {
+            // No operation needed for preview
         }
     }
 

@@ -29,7 +29,7 @@ class EditFoodActivity : ComponentActivity() {
         setContentView(R.layout.edit_food_activity)
 
         // Get the data passed to this activity
-        val foodId = intent.getIntExtra("FOOD_ID", 0)
+        val foodId = intent.getLongExtra("FOOD_ID", 0)
         val foodName = intent.getStringExtra("FOOD_NAME") ?: ""
         val foodCalories = intent.getDoubleExtra("FOOD_CALORIES", 0.0)
         val foodFat = intent.getDoubleExtra("FOOD_FAT", 0.0)
