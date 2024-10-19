@@ -92,6 +92,7 @@ import android.os.Environment
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.tooling.preview.Preview
+//import kotlin.coroutines.jvm.internal.CompletedContinuation.context
 
 
 // Constants are defined here.
@@ -156,6 +157,7 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 val foodFat = food.fat
                 val foodProtein = food.protein
                 val foodCarbs = food.carbs
+
 
                 val foodToAdd = FoodDisplay(name = foodName, 100.0, calories = foodCalories,
                     fat = foodFat, protein = foodProtein, carbs = foodCarbs)
@@ -418,12 +420,13 @@ fun PreviewMainAppWithMockData() {
             // No operation needed for preview
         }
 
-        override suspend fun insertFood(food: Food) {
+        override suspend fun insertFood(food: Food): Long {
             // No operation needed for preview
+            return 1
         }
     }
 
-    // Use the existing MainApp but inject mock data via the mock DAO
+     // Use the existing MainApp but inject mock data via the mock DAO
     MainApp(
         viewModel = mockViewModel,
         dateWithFoodsDao = mockDao
