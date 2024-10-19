@@ -36,7 +36,7 @@ data class Date(
 
 @Entity(tableName = "Food")
 data class Food(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
     val calories: Double,
     val fat: Double,

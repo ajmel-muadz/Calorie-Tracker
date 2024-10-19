@@ -8,6 +8,7 @@ package com.example.foodcalorieapp
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -133,7 +135,7 @@ class AppViewModel : ViewModel() {
         val dbMeals: CollectionReference = db.collection("MealImages")
 
         // convert the bitmap to base64 to store it as a string in the firestore
-        var encodedImage: String?
+        val encodedImage: String?
         val baos = java.io.ByteArrayOutputStream()
         image?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
         val b = baos.toByteArray()
@@ -156,19 +158,24 @@ class AppViewModel : ViewModel() {
         }
     }
 
-    fun getMealById(inId: Long?): String?{
+    suspend fun getMealImageById(inId: Long?): String?{
         val db = FirebaseFirestore.getInstance()
         var returnVal: String? = null
 
-        db.collection("MealImages")
-            .whereEqualTo("id", inId)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                for(document in querySnapshot.documents){
-                    val image = document.toObject(MealImage::class.java)
-                    returnVal =  image?.image
-                }
+        try {
+            val querySnapshot = db.collection("MealImages")
+                .whereEqualTo("id", inId)
+                .get()
+                .await()
+
+            for (document in querySnapshot.documents) {
+                val mealImage = document.toObject(MealImage::class.java)
+                returnVal = mealImage?.image
             }
+
+        }catch(e: Exception){
+            Log.e("FirestoreError", "Error getting meal image", e)
+        }
 
         return returnVal
     }
