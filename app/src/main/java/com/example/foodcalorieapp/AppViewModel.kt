@@ -180,6 +180,33 @@ class AppViewModel : ViewModel() {
 
         return returnVal
     }
+
+    suspend fun deleteMealImageFromFirebase(id: Long, context: Context){
+        val db = FirebaseFirestore.getInstance()
+
+        try{
+            val querySnapshot = db.collection("MealImages")
+                .whereEqualTo("id", id)
+                .get()
+                .await()
+
+            for(document in querySnapshot.documents){
+                document.reference.delete()
+                    .addOnSuccessListener {
+                        Toast.makeText(
+                            context,
+                            "Your Meal has been deleted from Firebase Firestore",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    .addOnFailureListener{ e ->
+                        Toast.makeText(context, "Fail to delete course $e", Toast.LENGTH_SHORT).show()
+                    }
+            }
+        }catch(e: Exception){
+            Log.e("FirestoreError", "Error deleting meal image", e)
+        }
+    }
     /* -------------------------------------------------------------------------------------- */
 }
 
