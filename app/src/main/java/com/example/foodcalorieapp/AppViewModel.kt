@@ -29,7 +29,8 @@ import java.util.Date
 
 class AppViewModel : ViewModel() {
 
-    //private val dateWithFoodsDao: DateWithFoodsDao = AppDatabase.getInstance().dateWithFoodsDao
+
+    private var dateWithFoodsDao: DateWithFoodsDao? = null
     var calendarDate by mutableStateOf<Calendar>(Calendar.getInstance())
     var formattedDate by mutableStateOf<String>(SimpleDateFormat.getDateInstance().format(Date()))
 
@@ -37,6 +38,17 @@ class AppViewModel : ViewModel() {
     var carList = _carList.asStateFlow()
 
     var selectedImageUri by mutableStateOf<Uri?>(null)
+
+
+    fun setContext(context: Context) {
+        dateWithFoodsDao = AppDatabase.getInstance(context).dateWithFoodsDao
+        if (dateWithFoodsDao == null) {
+
+            Toast.makeText(context, "Failed to Initialize DAO", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
 
     fun incrementDate() {
         val currentDate = this.calendarDate
@@ -50,11 +62,17 @@ class AppViewModel : ViewModel() {
         this.formattedDate = SimpleDateFormat.getDateInstance().format(this.calendarDate.timeInMillis)
     }
 
-//    fun updateFood(food: Food) {
-//        viewModelScope.launch {
-//            dateWithFoodsDao.updateFood(food)
-//        }
-//    }
+    fun updateFood(food: Food, context: Context) {
+        viewModelScope.launch {
+            if (dateWithFoodsDao != null) {
+                dateWithFoodsDao?.updateFood(food)
+                Toast.makeText(context, "Food updated!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "DAO not initialized!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 
 
 

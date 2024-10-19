@@ -66,6 +66,9 @@ interface DateWithFoodsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFood(food: Food)
 
+    @Query("SELECT * FROM Food WHERE id = :id AND dateString = :dateString")
+    suspend fun getFoodByIdAndDate(id: Int, dateString: String): Food?
+
     @Update
     suspend fun updateFood(food: Food)
 
@@ -87,7 +90,7 @@ interface DateWithFoodsDao {
         private var INSTANCE: AppDatabase? = null
 
         fun getInstance(context: Context): AppDatabase {
-            synchronized(this) {
+            synchronized(this ) {
                 return INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
