@@ -15,7 +15,6 @@ package com.example.foodcalorieapp
 import android.content.Context
 import androidx.room.Dao
 import androidx.room.Database
-import androidx.room.Delete
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Insert
@@ -26,7 +25,6 @@ import androidx.room.Relation
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
-import androidx.room.Update
 
 @Entity(tableName = "Date")
 data class Date(
@@ -56,7 +54,7 @@ data class DateWithFoods(
 
 @Dao
 interface DateWithFoodsDao {
-    @Transaction
+
     @Query("SELECT * FROM Food WHERE dateString = :dateString")
     suspend fun getFoodsWithDate(dateString: String): List<Food>
 
@@ -64,16 +62,7 @@ interface DateWithFoodsDao {
     suspend fun insertDate(date: Date)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertFood(food: Food)
-
-    @Query("SELECT * FROM Food WHERE id = :id AND dateString = :dateString")
-    suspend fun getFoodByIdAndDate(id: Int, dateString: String): Food?
-
-    @Update
-    suspend fun updateFood(food: Food)
-
-    @Delete
-    suspend fun deleteFood(food: Food)
+    suspend fun insertFood(food: Food): Long
 }
 
 @Database(
@@ -90,7 +79,7 @@ interface DateWithFoodsDao {
         private var INSTANCE: AppDatabase? = null
 
         fun getInstance(context: Context): AppDatabase {
-            synchronized(this ) {
+            synchronized(this) {
                 return INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,

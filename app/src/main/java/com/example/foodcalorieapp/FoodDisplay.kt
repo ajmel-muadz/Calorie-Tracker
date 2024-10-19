@@ -5,4 +5,4 @@ import android.graphics.Bitmap
 data class FoodDisplay(val name: String, val servingSize:Double, val calories: Double, val fat: Double,
                        val protein: Double, val carbs: Double)
 
-data class MealImage(val image: String?)
+data class MealImage(val image: String?, val id: Long)

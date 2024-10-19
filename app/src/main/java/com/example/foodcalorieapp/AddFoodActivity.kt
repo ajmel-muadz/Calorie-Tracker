@@ -391,8 +391,6 @@ fun AddFoodScreen(
                 val foodProteinToAdd: Double = viewModel.protein!!
                 val foodCarbsToAdd: Double = viewModel.carbs!!
 
-                viewModel.addMealToFirebase(image, context)
-
                 // Add the corresponding data to the database.
                 /* ------------------------------------------------------------------------------------------- */
                 val dateToInsert = Date(currentDateToAdd)
@@ -407,7 +405,10 @@ fun AddFoodScreen(
 
                 scope.launch {
                     dateWithFoodsDao.insertDate(dateToInsert)
-                    dateWithFoodsDao.insertFood(foodToInsert)
+                    val id = dateWithFoodsDao.insertFood(foodToInsert)
+
+                    // Add image to the firebase database
+                    viewModel.addMealToFirebase(image, context, id)
                 }
                 /* ------------------------------------------------------------------------------------------- */
 
@@ -418,10 +419,6 @@ fun AddFoodScreen(
                 Text(text = "Add Food")
             }
         }
-
-//        image?.let { bitmap ->
-//            viewModel.addMealToFirebase(bitmap, context)
-//        }
 
         // Show error message if there is any.
         viewModel.errorMessage?.let {
@@ -450,7 +447,7 @@ private fun launchMainActivity(context: Context, returnCurrentDate: String?, ret
     context.startActivity(intent)
 }
 
-// Mock implementation for the preview, this should make it easier for us with using split screen
+ // Mock implementation for the preview, this should make it easier for us with using split screen
 val mockDateWithFoodsDao = object : DateWithFoodsDao {
     override suspend fun getFoodsWithDate(dateString: String): List<Food> {
         return listOf(Food(name = "Sample Food", calories = 100.0, fat = 5.0, protein = 3.0, carbs = 12.0, dateString = dateString))
@@ -460,8 +457,9 @@ val mockDateWithFoodsDao = object : DateWithFoodsDao {
         // Do nothing
     }
 
-    override suspend fun insertFood(food: Food) {
+    override suspend fun insertFood(food: Food): Long {
         // Do nothing
+        return 1
     }
 
     override suspend fun getFoodByIdAndDate(id: Int, dateString: String): Food? {

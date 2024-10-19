@@ -30,29 +30,9 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-
 class AppViewModel : ViewModel() {
-
-
-    private var dateWithFoodsDao: DateWithFoodsDao? = null
     var calendarDate by mutableStateOf<Calendar>(Calendar.getInstance())
     var formattedDate by mutableStateOf<String>(SimpleDateFormat.getDateInstance().format(Date()))
-
-    public var _carList = MutableStateFlow<List<Food>>(emptyList())
-    var carList = _carList.asStateFlow()
-
-    var selectedImageUri by mutableStateOf<Uri?>(null)
-
-
-    fun setContext(context: Context) {
-        dateWithFoodsDao = AppDatabase.getInstance(context).dateWithFoodsDao
-        if (dateWithFoodsDao == null) {
-
-            Toast.makeText(context, "Failed to Initialize DAO", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-
 
     fun incrementDate() {
         val currentDate = this.calendarDate
@@ -66,19 +46,6 @@ class AppViewModel : ViewModel() {
         this.formattedDate = SimpleDateFormat.getDateInstance().format(this.calendarDate.timeInMillis)
     }
 
-    fun updateFood(food: Food, context: Context) {
-        viewModelScope.launch {
-            if (dateWithFoodsDao != null) {
-                dateWithFoodsDao?.updateFood(food)
-                Toast.makeText(context, "Food updated!", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "DAO not initialized!", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-
-
 
     // Anything contained in this code block is wholly responsible for API calls.
     /* -------------------------------------------------------------------------------------- */
@@ -91,6 +58,9 @@ class AppViewModel : ViewModel() {
 
     var errorMessage by mutableStateOf<String?>("")
     var loading by mutableStateOf(false)
+
+    private var _meal = MutableStateFlow<MealImage?>(null)
+    var meal = _meal.asStateFlow()
 
     private val apiService = RetrofitInstance.api
 
@@ -125,12 +95,15 @@ class AppViewModel : ViewModel() {
         }
     }
 
-    fun addMealToFirebase(image: Bitmap?, context: Context){
+    fun addMealToFirebase(image: Bitmap?, context: Context, id: Long){
+
         // on below line creating an instance of firebase firestore.
         val db : FirebaseFirestore = FirebaseFirestore.getInstance()
+
         //creating a collection reference for our Firebase Firestore database.
         val dbMeals: CollectionReference = db.collection("MealImages")
 
+        // convert the bitmap to base64 to store it as a string in the firestore
         var encodedImage: String?
         val baos = java.io.ByteArrayOutputStream()
         image?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
@@ -138,7 +111,7 @@ class AppViewModel : ViewModel() {
         encodedImage = android.util.Base64.encodeToString(b, android.util.Base64.DEFAULT)
 
         //adding our data to our courses object class.
-        val mealImages = MealImage(encodedImage)
+        val mealImages = MealImage(encodedImage, id)
 
         //below method is use to add data to Firebase Firestore.
         dbMeals.add(mealImages).addOnSuccessListener {
@@ -154,10 +127,22 @@ class AppViewModel : ViewModel() {
         }
     }
 
-//    fun getMealsList(){
-//
-//
-//
-//    }
+    fun getMealById(inId: Long?): String?{
+        val db = FirebaseFirestore.getInstance()
+        var returnVal: String? = null
+
+        db.collection("MealImages")
+            .whereEqualTo("id", inId)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                for(document in querySnapshot.documents){
+                    val image = document.toObject(MealImage::class.java)
+                    returnVal =  image?.image
+                }
+            }
+
+        return returnVal
+    }
     /* -------------------------------------------------------------------------------------- */
 }
+
