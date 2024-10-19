@@ -461,6 +461,19 @@ val mockDateWithFoodsDao = object : DateWithFoodsDao {
         // Do nothing
         return 1
     }
+
+    override suspend fun getFoodByIdAndDate(id: Int, dateString: String): Food? {
+        TODO("Not yet implemented")
+    }
+
+
+    override suspend fun updateFood(food: Food) {
+        // Do nothing
+    }
+
+    override suspend fun deleteFood(food: Food) {
+        // Do nothing
+    }
 }
 
 

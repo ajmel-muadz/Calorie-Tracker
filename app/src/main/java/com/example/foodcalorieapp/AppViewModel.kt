@@ -2,15 +2,11 @@
 /* -------------------------------------------------------------------------------- */
 // Used to help me create a firebase database.
 // 1. https://www.geeksforgeeks.org/android-jetpack-compose-add-data-to-firebase-firestore/
-//
-// Used to help convert the bitmap image to an base64 string to store in the firebase firestore
-// 2. https://medium.com/@reddytintaya/note-1-android-bitmap-to-base64-string-with-kotlin-552890c56b04
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.runtime.getValue
@@ -30,9 +26,29 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+
 class AppViewModel : ViewModel() {
+
+
+    private var dateWithFoodsDao: DateWithFoodsDao? = null
     var calendarDate by mutableStateOf<Calendar>(Calendar.getInstance())
     var formattedDate by mutableStateOf<String>(SimpleDateFormat.getDateInstance().format(Date()))
+
+    public var _carList = MutableStateFlow<List<Food>>(emptyList())
+    var carList = _carList.asStateFlow()
+
+    var selectedImageUri by mutableStateOf<Uri?>(null)
+
+
+    fun setContext(context: Context) {
+        dateWithFoodsDao = AppDatabase.getInstance(context).dateWithFoodsDao
+        if (dateWithFoodsDao == null) {
+
+            Toast.makeText(context, "Failed to Initialize DAO", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
 
     fun incrementDate() {
         val currentDate = this.calendarDate
@@ -45,6 +61,19 @@ class AppViewModel : ViewModel() {
         currentDate.add(Calendar.DAY_OF_MONTH, -1)
         this.formattedDate = SimpleDateFormat.getDateInstance().format(this.calendarDate.timeInMillis)
     }
+
+    fun updateFood(food: Food, context: Context) {
+        viewModelScope.launch {
+            if (dateWithFoodsDao != null) {
+                dateWithFoodsDao?.updateFood(food)
+                Toast.makeText(context, "Food updated!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "DAO not initialized!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+
 
 
     // Anything contained in this code block is wholly responsible for API calls.
