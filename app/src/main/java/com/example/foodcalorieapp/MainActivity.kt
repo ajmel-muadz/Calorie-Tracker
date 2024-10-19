@@ -194,8 +194,7 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 modifier = Modifier.weight(1f),
                 onEditClicked = { handleEditFood(it, context, dateWithFoodsDao, viewModel) },
                 onDeleteClicked = { handleDeleteFood(it, context, scope, dateWithFoodsDao, viewModel) },
-                viewModel
-
+                viewModel)
         }
         /* ----------------------------------------------------------------------------- */
 
@@ -207,25 +206,15 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
+fun SingleFood(foodDisplay: FoodDisplay,
+               onEditClicked: (FoodDisplay) -> Unit,
+               onDeleteClicked: (FoodDisplay) -> Unit,
+               viewModel: AppViewModel){
 
-fun SingleFood(foodDisplay: FoodDisplay, viewModel: AppViewModel) {
-    val expanded = remember { mutableStateOf(false) }
-    val extraPadding by animateDpAsState(
-        if (expanded.value) 20.dp else 20.dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        )
-    )
 
     var decodedImage by remember { mutableStateOf<Bitmap?>(null) }
 
-fun SingleFood(foodDisplay: FoodDisplay,
-               onEditClicked: (FoodDisplay) -> Unit,
-               onDeleteClicked: (FoodDisplay) -> Unit),
-               viewModel: AppViewModel{
-                 
-     val expanded = remember { mutableStateOf(false) }
+    val expanded = remember { mutableStateOf(false) }
     val extraPadding by animateDpAsState(
         if (expanded.value) 20.dp else 20.dp,
         animationSpec = spring(
@@ -254,7 +243,6 @@ fun SingleFood(foodDisplay: FoodDisplay,
             ) {
                 Column(
                     modifier = Modifier
-
                         .padding(start = 10.dp)
                 ) {
                     if (!expanded.value) {
@@ -310,17 +298,11 @@ fun SingleFood(foodDisplay: FoodDisplay,
 
                 // Row for icons
                 Row(
-
-                        .size(50.dp)
-                        .clickable { onEditClicked(foodDisplay) },
-                        .clickable { onDeleteClicked(foodDisplay) },
-                    contentAlignment = Alignment.Center
-
                 ) {
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable { },
+                            .clickable { onEditClicked(foodDisplay) },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -331,7 +313,7 @@ fun SingleFood(foodDisplay: FoodDisplay,
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable { },
+                            .clickable { onDeleteClicked (foodDisplay) },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -342,8 +324,6 @@ fun SingleFood(foodDisplay: FoodDisplay,
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable { },
-                        contentAlignment = Alignment.Center
                     ) {
                         IconButton(onClick ={
                             if(expanded.value){
@@ -408,18 +388,16 @@ fun SingleFood(foodDisplay: FoodDisplay,
 
 @Composable
 fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier,
-             onEditClicked: (FoodDisplay) -> Unit, onDeleteClicked: (FoodDisplay) -> Unit), 
-             viewModel: AppViewModel {
+             onEditClicked: (FoodDisplay) -> Unit, onDeleteClicked: (FoodDisplay) -> Unit,
+             viewModel: AppViewModel) {
     LazyColumn(modifier = modifier) {
         items(foodDisplays) { foodDisplay: FoodDisplay ->
             SingleFood(
 
                 foodDisplay = foodDisplay,
                 onEditClicked = onEditClicked,
-                onDeleteClicked = onDeleteClicked),
-                viewModel
-
-
+                onDeleteClicked = onDeleteClicked,
+                viewModel)
         }
     }
 }
