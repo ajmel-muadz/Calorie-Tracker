@@ -384,8 +384,6 @@ fun SingleFood(foodDisplay: FoodDisplay,
     }
 }
 
-
-
 @Composable
 fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier,
              onEditClicked: (FoodDisplay) -> Unit, onDeleteClicked: (FoodDisplay) -> Unit,
