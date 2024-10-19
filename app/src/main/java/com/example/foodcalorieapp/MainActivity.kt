@@ -411,7 +411,7 @@ fun handleEditFood(foodDisplay: FoodDisplay, context: Context, dateWithFoodsDao:
         val foodToEdit = foodList.find { it.name == foodDisplay.name }
 
         foodToEdit?.let {
-            launchEditFoodActivity(context, it)
+            launchEditFoodActivity(context, it, viewModel)
         } ?: run {
             Toast.makeText(context, "Food not found!", Toast.LENGTH_SHORT).show()
         }
@@ -436,7 +436,7 @@ fun handleDeleteFood(foodDisplay: FoodDisplay,context: Context, viewModelScope: 
     }
 }
 
-private fun launchEditFoodActivity(context: Context, food: Food) {
+private fun launchEditFoodActivity(context: Context, food: Food, viewModel: AppViewModel) {
     val intent = Intent(context, EditFoodActivity::class.java).apply {
         putExtra("FOOD_ID", food.id)
         putExtra("FOOD_NAME", food.name)
@@ -445,6 +445,7 @@ private fun launchEditFoodActivity(context: Context, food: Food) {
         putExtra("FOOD_PROTEIN", food.protein)
         putExtra("FOOD_CARBS", food.carbs)
         putExtra("CURRENT_DATE_STRING", food.dateString)
+        putExtra("CURRENT_DATE_TIME_IN_MILLIS", viewModel.calendarDate.timeInMillis)
     }
     context.startActivity(intent)
 }

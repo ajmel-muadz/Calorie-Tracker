@@ -103,7 +103,6 @@ class EditFoodActivity : ComponentActivity() {
         val intent = Intent(this@EditFoodActivity, MainActivity::class.java).apply {
             putExtra("RETURN_CURRENT_DATE", returnCurrentDate)
             putExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", returnCurrentDateTimeInMillis)
-
         }
         startActivity(intent)
         finish()
