@@ -75,6 +75,8 @@ interface DateWithFoodsDao {
     @Delete
     suspend fun deleteFood(food: Food)
 
+    @Delete
+    suspend fun deleteDate(date: Date)
 }
 
 @Database(
