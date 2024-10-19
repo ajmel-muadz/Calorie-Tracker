@@ -474,6 +474,11 @@ val mockDateWithFoodsDao = object : DateWithFoodsDao {
     override suspend fun deleteFood(food: Food) {
         // Do nothing
     }
+
+     override suspend fun deleteDate(date: Date) {
+
+     }
+
 }
 
 

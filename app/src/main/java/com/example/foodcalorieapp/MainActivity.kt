@@ -109,6 +109,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 // Constants are defined here.
@@ -384,6 +385,8 @@ fun SingleFood(foodDisplay: FoodDisplay,
     }
 }
 
+
+
 @Composable
 fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier,
              onEditClicked: (FoodDisplay) -> Unit, onDeleteClicked: (FoodDisplay) -> Unit,
@@ -420,21 +423,50 @@ fun handleEditFood(foodDisplay: FoodDisplay, context: Context, dateWithFoodsDao:
 
 
 
-fun handleDeleteFood(foodDisplay: FoodDisplay,context: Context, viewModelScope: CoroutineScope, dateWithFoodsDao: DateWithFoodsDao, viewModel: AppViewModel) {
+fun handleDeleteFood(
+    foodDisplay: FoodDisplay,
+    context: Context,
+    viewModelScope: CoroutineScope,
+    dateWithFoodsDao: DateWithFoodsDao,
+    viewModel: AppViewModel
+) {
     val selectedDateString = viewModel.formattedDate
 
     viewModelScope.launch {
+        // Retrieve the list of foods for the selected date
         val foodList = dateWithFoodsDao.getFoodsWithDate(selectedDateString)
-        val foodToDelete = foodList.find { it.name == foodDisplay.name }
+        val foodToDelete = foodList.find { it.id == foodDisplay.id }
 
         foodToDelete?.let {
+            // Delete the food from the database
             dateWithFoodsDao.deleteFood(it)
             Toast.makeText(context, "Food deleted!", Toast.LENGTH_SHORT).show()
+
+            // Check if there are any remaining foods for this date
+            val remainingFoods = dateWithFoodsDao.getFoodsWithDate(selectedDateString)
+            if (remainingFoods.isEmpty()) {
+                // If no more foods are left, delete the date entry as well
+                dateWithFoodsDao.deleteDate(Date(selectedDateString))
+            }
+
+            restartMainActivity(context, selectedDateString, viewModel.calendarDate.timeInMillis)
         } ?: run {
             Toast.makeText(context, "Food not found!", Toast.LENGTH_SHORT).show()
         }
     }
 }
+
+private fun restartMainActivity(context: Context, date: String, dateInMillis: Long) {
+    val intent = Intent(context, MainActivity::class.java).apply {
+        putExtra("RETURN_CURRENT_DATE", date)
+        putExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", dateInMillis)
+
+    }
+    context.startActivity(intent)
+}
+
+
+
 
 private fun launchEditFoodActivity(context: Context, food: Food, viewModel: AppViewModel) {
     val intent = Intent(context, EditFoodActivity::class.java).apply {
@@ -629,6 +661,10 @@ fun PreviewMainAppWithMockData() {
 
         override suspend fun deleteFood(food: Food) {
             // No operation needed for preview
+        }
+
+        override suspend fun deleteDate(date: Date) {
+
         }
     }
 
