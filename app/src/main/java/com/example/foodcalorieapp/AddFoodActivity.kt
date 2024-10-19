@@ -25,14 +25,17 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -72,6 +75,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -121,31 +125,36 @@ fun AddFoodScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    var captureImageUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
-    var newFile: File? = null
-
     var showImageBox by remember { mutableStateOf(false) }  // State variable to control image Box display
+    /* ---------------------------------------------------------------------------------------- */
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success) {
-            val imageByteArray = newFile?.readBytes()
+    var image by remember { mutableStateOf<Bitmap?>(null) }
 
-            if (imageByteArray != null) {
-                viewModel.addMealToFirebase(imageByteArray, context)
-            }
-            showImageBox = true  // Show the image Box after capturing the image
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            Log.d("AddFoodActivity", "Image captured:" )
+            image = bitmap
+        }else{
+            Log.e("Camera Capture ","Failed to capture image")
         }
     }
 
     val permissionLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-            if (it) {
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean->
+            if (isGranted) {
                 Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
-                cameraLauncher.launch(captureImageUri)
+                cameraLauncher.launch(null)
             } else {
                 Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
             }
         }
+    /* ---------------------------------------------------------------------------------------- */
+
+
 
     Column(
         modifier = Modifier
@@ -279,14 +288,12 @@ fun AddFoodScreen(
                         .background(Color.Gray),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (captureImageUri != Uri.EMPTY) {
+                    image?.let { bitmap ->
                         Image(
-                            painter = rememberAsyncImagePainter(captureImageUri),
-                            contentDescription = null,
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Captured Image",
                             modifier = Modifier.fillMaxSize()
                         )
-                    } else {
-                        Text(text = "No image selected")
                     }
                 }
             }
@@ -337,20 +344,14 @@ fun AddFoodScreen(
                             Button(
                                 onClick = {
                                     showDialog = false
+                                    showImageBox = true
 
-                                    newFile = context.createImageFile(viewModel.name)
-                                    captureImageUri = FileProvider.getUriForFile(
-                                        context,
-                                        context.packageName + ".provider",
-                                        newFile!!
-                                    )
-
-                                    val permissionCheckResult = ContextCompat.checkSelfPermission(
-                                        context,
-                                        Manifest.permission.CAMERA
-                                    )
-                                    if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
-                                        cameraLauncher.launch(captureImageUri)
+                                    if (ContextCompat.checkSelfPermission(
+                                            context,
+                                            Manifest.permission.CAMERA
+                                        ) == PackageManager.PERMISSION_GRANTED
+                                    ) {
+                                        cameraLauncher.launch(null)
                                     } else {
                                         permissionLauncher.launch(Manifest.permission.CAMERA)
                                     }
@@ -381,6 +382,7 @@ fun AddFoodScreen(
         // Show the 'Add Food' button if appropriate.
         if (viewModel.name != "No item found" && viewModel.name != "<Empty>") {
             Button(onClick = {
+                Log.d("AddFoodActivity", "Button clicked")
                 val currentDateToAdd: String = currentDate!!  // Current date passed from intent
                 val foodNameToAdd: String =
                     (viewModel.name!!).replaceFirstChar { it.uppercase() }  // Capitalize food name
@@ -388,6 +390,8 @@ fun AddFoodScreen(
                 val foodFatToAdd: Double = viewModel.fat!!
                 val foodProteinToAdd: Double = viewModel.protein!!
                 val foodCarbsToAdd: Double = viewModel.carbs!!
+
+                viewModel.addMealToFirebase(image, context)
 
                 // Add the corresponding data to the database.
                 /* ------------------------------------------------------------------------------------------- */
@@ -415,6 +419,10 @@ fun AddFoodScreen(
             }
         }
 
+//        image?.let { bitmap ->
+//            viewModel.addMealToFirebase(bitmap, context)
+//        }
+
         // Show error message if there is any.
         viewModel.errorMessage?.let {
             if (it.isNotEmpty()) {
@@ -423,49 +431,6 @@ fun AddFoodScreen(
                     color = MaterialTheme.colorScheme.error
                 )
             }
-        }
-    }
-}
-
-
-@Composable
-fun imagePicker(onImageSelected: (Uri) -> Unit){
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri: Uri? ->
-            uri?.let { onImageSelected(it) }
-        }
-    )
-    Button(
-        onClick = { launcher.launch("image/*") }
-    ) {
-        Text("Select Image")
-    }
-
-}
-
-@Composable
-fun getImageFromCamera() {
-    val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    val context = LocalContext.current
-
-    var captureImageUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
-    val capturedImagesUriList = remember { mutableStateListOf<Uri>() }
-
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()){ success ->
-        if (success){
-            capturedImagesUriList.add(captureImageUri)
-        }
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()){
-        if (it){
-            Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
-            cameraLauncher.launch(captureImageUri)
-        } else {
-            Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
         }
     }
 }

@@ -96,6 +96,7 @@ dependencies {
 
     // Firebase stuff
     implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
-    implementation(platform("com.google.firebase:firebase-firestore"))
+    implementation(platform("com.google.firebase:firebase-firestore:22.0.1"))
     implementation("com.google.firebase:firebase-analytics")
+    implementation(kotlin("script-runtime"))
 }

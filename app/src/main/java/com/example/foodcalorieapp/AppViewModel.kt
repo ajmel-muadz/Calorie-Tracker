@@ -2,11 +2,15 @@
 /* -------------------------------------------------------------------------------- */
 // Used to help me create a firebase database.
 // 1. https://www.geeksforgeeks.org/android-jetpack-compose-add-data-to-firebase-firestore/
+//
+// Used to help convert the bitmap image to an base64 string to store in the firebase firestore
+// 2. https://medium.com/@reddytintaya/note-1-android-bitmap-to-base64-string-with-kotlin-552890c56b04
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.runtime.getValue
@@ -121,21 +125,32 @@ class AppViewModel : ViewModel() {
         }
     }
 
-    fun addMealToFirebase(imageByteArray: ByteArray, context: Context){
+    fun addMealToFirebase(image: Bitmap?, context: Context){
         // on below line creating an instance of firebase firestore.
         val db : FirebaseFirestore = FirebaseFirestore.getInstance()
         //creating a collection reference for our Firebase Firestore database.
-        val dbMeals: CollectionReference = db.collection("MealImage")
+        val dbMeals: CollectionReference = db.collection("MealImages")
+
+        var encodedImage: String?
+        val baos = java.io.ByteArrayOutputStream()
+        image?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+        val b = baos.toByteArray()
+        encodedImage = android.util.Base64.encodeToString(b, android.util.Base64.DEFAULT)
+
         //adding our data to our courses object class.
-        val mealImage = MealImage(imageByteArray)
+        val mealImages = MealImage(encodedImage)
 
         //below method is use to add data to Firebase Firestore.
-        dbMeals.add(mealImage).addOnSuccessListener {
+        dbMeals.add(mealImages).addOnSuccessListener {
             Toast.makeText(
                 context,
                 "Your Meal has been added to Firebase Firestore",
                 Toast.LENGTH_SHORT
             ).show()
+        }.addOnFailureListener { e ->
+            // this method is called when the data addition process is failed.
+            // displaying a toast message when data addition is failed.
+            Toast.makeText(context, "Fail to add course \n$e", Toast.LENGTH_SHORT).show()
         }
     }
 
