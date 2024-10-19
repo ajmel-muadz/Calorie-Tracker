@@ -405,7 +405,7 @@ fun AddFoodScreen(
 
                 scope.launch {
                     dateWithFoodsDao.insertDate(dateToInsert)
-                    val id = dateWithFoodsDao.insertFood(foodToInsert)
+                    val id: Long = dateWithFoodsDao.insertFood(foodToInsert)
 
                     // Add image to the firebase database
                     viewModel.addMealToFirebase(image, context, id)
