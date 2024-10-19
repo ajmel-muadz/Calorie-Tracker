@@ -467,6 +467,10 @@ val mockDateWithFoodsDao = object : DateWithFoodsDao {
     }
 
 
+     override suspend fun getAllFoods(): List<Food> {
+         TODO("Not yet implemented")
+     }
+
     override suspend fun updateFood(food: Food) {
         // Do nothing
     }
@@ -477,6 +481,10 @@ val mockDateWithFoodsDao = object : DateWithFoodsDao {
 
      override suspend fun deleteDate(date: Date) {
 
+     }
+
+     override suspend fun resetFoodIdCounter() {
+         TODO("Not yet implemented")
      }
 
 }

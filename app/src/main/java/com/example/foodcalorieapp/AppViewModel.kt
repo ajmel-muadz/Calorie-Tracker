@@ -17,6 +17,8 @@ import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.CollectionReference
@@ -32,9 +34,34 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+
 class AppViewModel : ViewModel() {
+
+
+    private var dateWithFoodsDao: DateWithFoodsDao? = null
     var calendarDate by mutableStateOf<Calendar>(Calendar.getInstance())
     var formattedDate by mutableStateOf<String>(SimpleDateFormat.getDateInstance().format(Date()))
+
+
+    private val _foodsList = MutableLiveData<List<Food>>()
+    val foodList: LiveData<List<Food>> = _foodsList
+
+
+    public var _carList = MutableStateFlow<List<Food>>(emptyList())
+    var carList = _carList.asStateFlow()
+
+    var selectedImageUri by mutableStateOf<Uri?>(null)
+
+
+    fun setContext(context: Context) {
+        dateWithFoodsDao = AppDatabase.getInstance(context).dateWithFoodsDao
+        if (dateWithFoodsDao == null) {
+
+            Toast.makeText(context, "Failed to Initialize DAO", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
 
     fun incrementDate() {
         val currentDate = this.calendarDate
@@ -46,6 +73,21 @@ class AppViewModel : ViewModel() {
         val currentDate = this.calendarDate
         currentDate.add(Calendar.DAY_OF_MONTH, -1)
         this.formattedDate = SimpleDateFormat.getDateInstance().format(this.calendarDate.timeInMillis)
+    }
+
+    fun updateFood(food: Food, context: Context) {
+        viewModelScope.launch {
+            if (dateWithFoodsDao != null) {
+                dateWithFoodsDao?.updateFood(food)
+                Toast.makeText(context, "Food updated!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "DAO not initialized!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    fun updateFoodsList(updatedFoods: List<Food>) {
+        _foodsList.value = updatedFoods
     }
 
 

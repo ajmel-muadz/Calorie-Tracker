@@ -107,6 +107,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -447,14 +448,34 @@ fun handleDeleteFood(
             if (remainingFoods.isEmpty()) {
                 // If no more foods are left, delete the date entry as well
                 dateWithFoodsDao.deleteDate(Date(selectedDateString))
+
+                // Check if there are any remaining foods in the entire table
+                val allFoods = dateWithFoodsDao.getAllFoods()
+                if (allFoods.isEmpty()) {
+                    // Reset the auto-increment ID counter
+                    dateWithFoodsDao.resetFoodIdCounter()
+                }
             }
 
+            refreshFoodsList(viewModel, dateWithFoodsDao, selectedDateString)
             restartMainActivity(context, selectedDateString, viewModel.calendarDate.timeInMillis)
+
         } ?: run {
             Toast.makeText(context, "Food not found!", Toast.LENGTH_SHORT).show()
         }
     }
 }
+
+fun refreshFoodsList(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, date: String) {
+    viewModel.viewModelScope.launch {
+        // Refresh the foods list from the database
+        val updatedFoods = dateWithFoodsDao.getFoodsWithDate(date)
+        // Update the ViewModel's data
+        viewModel.updateFoodsList(updatedFoods)
+    }
+}
+
+
 
 private fun restartMainActivity(context: Context, date: String, dateInMillis: Long) {
     val intent = Intent(context, MainActivity::class.java).apply {
@@ -655,11 +676,19 @@ fun PreviewMainAppWithMockData() {
             TODO("Not yet implemented")
         }
 
+        override suspend fun getAllFoods(): List<Food> {
+            TODO("Not yet implemented")
+        }
+
         override suspend fun updateFood(food: Food) {
             // No operation needed for preview
         }
 
         override suspend fun deleteFood(food: Food) {
+            // No operation needed for preview
+        }
+
+        override suspend fun resetFoodIdCounter() {
             // No operation needed for preview
         }
 

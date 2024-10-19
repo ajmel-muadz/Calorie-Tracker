@@ -72,6 +72,15 @@ interface DateWithFoodsDao {
     @Update
     suspend fun updateFood(food: Food)
 
+
+
+    @Query("DELETE FROM sqlite_sequence WHERE name='Food'")
+    suspend fun resetFoodIdCounter()
+
+
+    @Query("SELECT * FROM Food")
+    suspend fun getAllFoods(): List<Food>
+
     @Delete
     suspend fun deleteFood(food: Food)
 
