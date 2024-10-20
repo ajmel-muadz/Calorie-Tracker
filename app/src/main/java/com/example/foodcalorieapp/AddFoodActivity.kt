@@ -44,6 +44,8 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.compose.material3.RadioButton
+import androidx.compose.ui.semantics.Role
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
 import androidx.activity.viewModels
@@ -103,6 +105,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -247,6 +251,18 @@ fun AddFoodScreen(
                 .fillMaxWidth()
                 .padding(10.dp)
         )
+
+        // If no food item is found we launch an activity allowing for manual input.
+        if (viewModel.name == "No item found" && searchKey != "" && hasSearched) {
+            launchAddNutritionActivity(
+                context,
+                searchKey,
+                currentDate,
+                currentDateTimeInMillis
+            )
+            viewModel.name = "<Empty>"
+        }
+
         /* --------------------------------------------------------------------------- */
         if(viewModel.name != "<Empty>" && viewModel.name != "No item found"){
             Column(
@@ -413,7 +429,6 @@ fun AddFoodScreen(
                         }
                     }
                 }
-
                 viewModel.mealType = selectedOption
                 /* -------------------------------------------------------------------------- */
             }
@@ -447,17 +462,6 @@ fun AddFoodScreen(
 
                     }
                 }
-
-            // If no food item is found we launch an activity allowing for manual input.
-            if (viewModel.name == "No item found" && searchKey != "" && hasSearched) {
-                launchAddNutritionActivity(
-                    context,
-                    searchKey,
-                    currentDate,
-                    currentDateTimeInMillis
-                )
-                viewModel.name = "<Empty>"
-            }
         }
 
             IconButton(onClick = {
@@ -551,7 +555,6 @@ fun AddFoodScreen(
                 val foodProteinToAdd: Double = viewModel.protein!!
                 val foodCarbsToAdd: Double = viewModel.carbs!!
                 val foodMealTypeToAdd: String = viewModel.mealType
-                val foodServingsToAdd: Double = viewModel.servingSize!!
 
                 // Add the corresponding data to the database.
                 /* ------------------------------------------------------------------------------------------- */
@@ -609,79 +612,3 @@ private fun launchMainActivity(context: Context, returnCurrentDate: String?, ret
     intent.putExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", returnCurrentDateTimeInMillis)
     context.startActivity(intent)
 }
-
-/*
- // Mock implementation for the preview, this should make it easier for us with using split screen
-val mockDateWithFoodsDao = object : DateWithFoodsDao {
-    override suspend fun getFoodsWithDate(dateString: String): List<Food> {
-        return listOf(Food(name = "Sample Food", calories = 100.0, fat = 5.0, protein = 3.0, carbs = 12.0, dateString = dateString))
-    }
-
-    override suspend fun insertDate(date: Date) {
-        // Do nothing
-    }
-
-    override suspend fun insertFood(food: Food): Long {
-        // Do nothing
-        return 1
-    }
-
-    override suspend fun getFoodByIdAndDate(id: Int, dateString: String): Food? {
-        TODO("Not yet implemented")
-    }
-
-
-     override suspend fun getAllFoods(): List<Food> {
-         TODO("Not yet implemented")
-     }
-
-    override suspend fun updateFood(food: Food) {
-        // Do nothing
-    }
-
-    override suspend fun deleteFood(food: Food) {
-        // Do nothing
-    }
-
-     override suspend fun deleteDate(date: Date) {
-
-     }
-
-     override suspend fun insertUserGoals(userGoals: UserGoals) {
-         TODO("Not yet implemented")
-     }
-
-     override suspend fun updateUserGoals(userGoals: UserGoals) {
-         TODO("Not yet implemented")
-     }
-
-     override suspend fun getUserGoals(): UserGoals? {
-         TODO("Not yet implemented")
-     }
-
-     override suspend fun resetFoodIdCounter() {
-         TODO("Not yet implemented")
-     }
-
-} */
-
-
-/*
-@Preview(showBackground = true)
-@Composable
-fun PreviewAddFoodScreen() {
-    val mockViewModel = AppViewModel().apply {
-        name = "Example Food"
-        calories = 200.0
-        fat = 10.0
-        protein = 5.0
-        carbs = 30.0
-    }
-
-    AddFoodScreen(
-        viewModel = mockViewModel,
-        dateWithFoodsDao = mockDateWithFoodsDao,
-        currentDate = "2024-10-18",
-        currentDateTimeInMillis = System.currentTimeMillis()
-    )
-} */

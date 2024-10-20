@@ -10,6 +10,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.ui.semantics.Role
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
@@ -240,7 +248,6 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
                     }
                 }
             }
-
             viewModel.mealType = selectedOption
             /* -------------------------------------------------------------------------- */
             /* ---------------------------------------------------------------------------- */
