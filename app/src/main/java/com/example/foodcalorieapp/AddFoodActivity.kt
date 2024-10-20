@@ -138,7 +138,6 @@ fun AddFoodScreen(
 
     var searchKey by remember { mutableStateOf("") }  // Variable for search term
 
-    val expand = remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
@@ -148,14 +147,13 @@ fun AddFoodScreen(
     /* ---------------------------------------------------------------------------------------- */
 
     var image by remember { mutableStateOf<Bitmap?>(null) }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-    var imageSelection by remember { mutableStateOf(false) }
 
     var hasSearched by remember { mutableStateOf(false) }
 
+    // Launcher for taking a picture with the camera.
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap: Bitmap? ->
+    ) { bitmap: Bitmap? -> // Callback function to handle the captured image.
         if (bitmap != null) {
             d("AddFoodActivity", "Image captured:" )
             image = bitmap
@@ -164,15 +162,15 @@ fun AddFoodScreen(
         }
     }
 
+    // Launcher for selecting an image from the gallery.
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
             uri?.let{
-                val contentResolver = context.contentResolver
+                val contentResolver = context.contentResolver // Get the content resolver
                 try {
-                    val inputStream = contentResolver.openInputStream(it)
-                    image = android.graphics.BitmapFactory.decodeStream(inputStream)
-                    imageUri = it
+                    val inputStream = contentResolver.openInputStream(it) // Open the input stream for the selected image
+                    image = android.graphics.BitmapFactory.decodeStream(inputStream) // Decode the image
                 }catch (e: Exception){
                     Log.e("AddFoodActivity", "Failed to load image", e)
                 }
@@ -180,33 +178,20 @@ fun AddFoodScreen(
         }
     )
 
-
+    // Request permission to use camera.
     val permissionLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean->
             if (isGranted) {
                 Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
-                cameraLauncher.launch(null)
+                cameraLauncher.launch(null) // Launch the camera
             } else {
                 Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
             }
         }
 
-//    val galleryPermissionLauncher =
-//        rememberLauncherForActivityResult(
-//            contract = ActivityResultContracts.RequestPermission()
-//        ) { isGranted: Boolean->
-//            if (isGranted) {
-//                Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
-//                galleryLauncher.launch("image/*")
-//            } else {
-//                Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
-//            }
-//        }
     /* ---------------------------------------------------------------------------------------- */
-
-
 
     Column(
         modifier = Modifier
@@ -383,7 +368,7 @@ fun AddFoodScreen(
                     contentAlignment = Alignment.Center
                 ) {
 
-                    image?.let { bitmap ->
+                    image?.let { bitmap -> // If an image is captured, display it.
                         Image(
                             bitmap = bitmap.asImageBitmap(),
                             contentDescription = null,
@@ -391,7 +376,7 @@ fun AddFoodScreen(
                                 .fillMaxSize()
                                 .clip(RoundedCornerShape(10.dp))
                         )
-                    } ?: run{
+                    } ?: run{ // If no image is captured, display a message.
                         Text (
                             text = "No image captured",
                             modifier = Modifier.align(Alignment.Center),
@@ -417,7 +402,7 @@ fun AddFoodScreen(
             focusManager.clearFocus()  // Clear cursor focus.
             keyboardController?.hide()
 
-            showDialog = true
+            showDialog = true // Show the dialog that allows for selecting an image.
         }) {
             Icon(
                 imageVector = Icons.Default.Image,
@@ -425,6 +410,7 @@ fun AddFoodScreen(
             )
         }
 
+        // Show dialog when user clicks on the image icon.
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = {
@@ -449,14 +435,15 @@ fun AddFoodScreen(
                                     showDialog = false
                                     showImageBox = true
 
+                                    // Check for camera permission.
                                     if (ContextCompat.checkSelfPermission(
                                             context,
                                             Manifest.permission.CAMERA
                                         ) == PackageManager.PERMISSION_GRANTED
                                     ) {
-                                        cameraLauncher.launch(null)
+                                        cameraLauncher.launch(null) // Launch the camera
                                     } else {
-                                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                                        permissionLauncher.launch(Manifest.permission.CAMERA) // Request permission
                                     }
                                 },
                                 modifier = Modifier
@@ -470,9 +457,8 @@ fun AddFoodScreen(
                             onClick = {
                                 showDialog = false
                                 showImageBox = true
-                                imageSelection = true
 
-                                galleryLauncher.launch("image/*")
+                                galleryLauncher.launch("image/*") // Launch the gallery
                             },
                             modifier = Modifier
                                 .padding(bottom = 10.dp)

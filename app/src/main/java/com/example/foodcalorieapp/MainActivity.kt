@@ -163,6 +163,7 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current;
 
+    viewModel.refreshDailySummary()
     var totalCalories by remember { mutableStateOf(0.0) }
 
     Column(
@@ -247,10 +248,12 @@ fun SingleFood(foodDisplay: FoodDisplay,
                onDeleteClicked: (FoodDisplay) -> Unit,
                viewModel: AppViewModel) {
 
-    var decodedImage by remember { mutableStateOf<Bitmap?>(null) }
-    var loadingImage by remember { mutableStateOf(false) }
+    var decodedImage by remember { mutableStateOf<Bitmap?>(null) } // State variable to hold decoded image
+    var loadingImage by remember { mutableStateOf(false) } // State variable to control image loading
 
-    val expanded = remember { mutableStateOf(false) }
+    val expanded = remember { mutableStateOf(false) } // State variable to control expanded state
+
+    // Expand animation for the card.
     val extraPadding by animateDpAsState(
         if (expanded.value) 20.dp else 20.dp,
         animationSpec = spring(
@@ -258,7 +261,6 @@ fun SingleFood(foodDisplay: FoodDisplay,
             stiffness = Spring.StiffnessLow
         )
     )
-
 
     Card(
         modifier = Modifier
@@ -363,6 +365,7 @@ fun SingleFood(foodDisplay: FoodDisplay,
                                 expanded.value = true
                             }
                         }) {
+                            // Icon for expanding the card.
                             if (expanded.value) {
                                 Icon(
                                     imageVector = Icons.Filled.KeyboardArrowUp,
@@ -387,23 +390,24 @@ fun SingleFood(foodDisplay: FoodDisplay,
                     LaunchedEffect(foodDisplay.id) {
                         Log.d("FoodLog", "Food ID: ${foodDisplay.id}")
 
-                        loadingImage = true
+                        loadingImage = true // Set loadingImage to true before decoding the image
 
-                        val imageString: String? = viewModel.getMealImageById(foodDisplay.id)
+                        val imageString: String? = viewModel.getMealImageById(foodDisplay.id) // Get the image string from the firebase storage
 
                         delay(2000)
 
-
+                        // Decode the image string into a Bitmap
                         if (!imageString.isNullOrEmpty()) {
                             val imageBytes = Base64.decode(imageString, Base64.DEFAULT)
                             decodedImage =
                                 BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                         }
 
-                        loadingImage = false
+                        loadingImage = false // Set loadingImage to false after decoding the image
                     }
-                    if (loadingImage) {
-                        CircularProgressIndicator(
+                    // Display a loading indicator while the image is being decoded
+                     if (loadingImage) {
+                            CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center)
                         )
                     } else {
@@ -430,7 +434,6 @@ fun SingleFood(foodDisplay: FoodDisplay,
         }
     }
 }
-
 
 @Composable
 fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier,
@@ -484,9 +487,15 @@ fun handleDeleteFood(
         val foodToDelete = foodList.find { it.id == foodDisplay.id }
 
         foodToDelete?.let {
+
+            // Delete the image from Firebase Storage
+            viewModel.deleteMealImageFromFirebase(it.id, context)
+
             // Delete the food from the database
             dateWithFoodsDao.deleteFood(it)
             Toast.makeText(context, "Food deleted!", Toast.LENGTH_SHORT).show()
+
+            viewModel.refreshDailySummary()
 
             // Check if there are any remaining foods for this date
             val remainingFoods = dateWithFoodsDao.getFoodsWithDate(selectedDateString)
@@ -670,6 +679,9 @@ fun SummaryCard(viewModel: AppViewModel) {
     var showDialog by remember { mutableStateOf(false) } // State to control dialog visibility
     val context = LocalContext.current
 
+    val defaultTextColor = Color.Black
+    val goalMetColor = Color(0xFF418341)
+
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 15.dp),
         modifier = Modifier
@@ -701,24 +713,29 @@ fun SummaryCard(viewModel: AppViewModel) {
 
             // Display the main calories summary
             Text(
-                text = "Calories: ${viewModel.totalCalories} / ${viewModel.caloriesGoal} kcal",
-                fontSize = 16.sp
+                text = "Calories: ${String.format("%.2f", viewModel.totalCalories)} / ${String.format("%.2f", viewModel.caloriesGoal)} kcal",
+                fontSize = 16.sp,
+                        color = if (viewModel.totalCalories >= viewModel.caloriesGoal) goalMetColor else defaultTextColor
             )
+
 
             if (isExpanded) {
                 // Show expanded details
                 Column {
                     Text(
-                        text = "${viewModel.totalFat}g fat / ${viewModel.fatGoal}g",
-                        fontSize = 14.sp
+                        text = "${String.format("%.2f", viewModel.totalFat)}g fat / ${String.format("%.2f", viewModel.fatGoal)}g",
+                        fontSize = 14.sp,
+                        color = if (viewModel.totalFat >= viewModel.fatGoal) goalMetColor else defaultTextColor
                     )
                     Text(
-                        text = "${viewModel.totalProtein}g protein / ${viewModel.proteinGoal}g",
-                        fontSize = 14.sp
+                        text = "${String.format("%.2f", viewModel.totalProtein)}g protein / ${String.format("%.2f", viewModel.proteinGoal)}g",
+                        fontSize = 14.sp,
+                        color = if (viewModel.totalProtein >= viewModel.proteinGoal) goalMetColor else defaultTextColor
                     )
                     Text(
-                        text = "${viewModel.totalCarbs}g carbs / ${viewModel.carbGoal}g",
-                        fontSize = 14.sp
+                        text = "${String.format("%.2f", viewModel.totalCarbs)}g carbs / ${String.format("%.2f", viewModel.carbGoal)}g",
+                        fontSize = 14.sp,
+                        color = if (viewModel.totalCarbs >= viewModel.carbGoal) goalMetColor else defaultTextColor
                     )
                 }
             }
