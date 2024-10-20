@@ -30,6 +30,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.util.Log.d
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -61,11 +62,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,6 +82,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,6 +92,9 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
 import kotlinx.coroutines.launch
 import java.io.File
+import java.math.BigDecimal
+import java.math.RoundingMode
+import androidx.compose.material3.Text as Text
 
 class AddFoodActivity : ComponentActivity() {
     private val appViewModel: AppViewModel by viewModels()
@@ -114,6 +120,12 @@ fun AddFoodScreen(
     currentDate: String?,
     currentDateTimeInMillis: Long
 ) {
+    // The default stats prior changing serving size
+    var cals by remember { mutableDoubleStateOf(0.0) }
+    var fats by remember { mutableDoubleStateOf(0.0) }
+    var carb by remember { mutableDoubleStateOf(0.0) }
+    var proteins by remember { mutableDoubleStateOf(0.0) }
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -134,7 +146,7 @@ fun AddFoodScreen(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? ->
         if (bitmap != null) {
-            Log.d("AddFoodActivity", "Image captured:" )
+            d("AddFoodActivity", "Image captured:" )
             image = bitmap
         }else{
             Log.e("Camera Capture ","Failed to capture image")
@@ -207,6 +219,14 @@ fun AddFoodScreen(
             // Display the values retrieved from the API call.
             /* -------------------------------------------------------------------------- */
             if (viewModel.name != "<Empty>" && viewModel.name != "No item found") {
+                //Set standard metrics
+                LaunchedEffect(viewModel.name) {
+                    cals = viewModel.calories!!
+                    fats = viewModel.fat!!
+                    proteins = viewModel.protein!!
+                    carb = viewModel.carbs!!
+                }
+
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -277,6 +297,35 @@ fun AddFoodScreen(
                         }
                     }
                 }
+
+                /* ----------------------{ Modify Serving Size Input }----------------------- */
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+
+                    TextField(
+                        value = viewModel.servingSize.toString(), // Convert Double to String
+                        onValueChange = { text ->
+                            // Convert String input back to Double, only if valid
+                            val number = text.toDoubleOrNull()
+                            if (number != null) {
+                                // Update the food values according to the input serving size (by weight)
+                                viewModel.servingSize = number
+                                viewModel.carbs = BigDecimal(carb * (number / 100)).setScale(2, RoundingMode.HALF_UP).toDouble()
+                                viewModel.fat = BigDecimal(fats * (number / 100)).setScale(2, RoundingMode.HALF_UP).toDouble()
+                                viewModel.protein = BigDecimal(proteins * (number / 100)).setScale(2, RoundingMode.HALF_UP).toDouble()
+                                viewModel.calories = BigDecimal(cals * (number / 100)).setScale(2, RoundingMode.HALF_UP).toDouble()
+                            }},
+                        label = { Text(text = "Serving size (g)") },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(20.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
+                /* -------------------------------------------------------------------------- */
             }
             /* -------------------------------------------------------------------------- */
 
@@ -384,7 +433,7 @@ fun AddFoodScreen(
         // Show the 'Add Food' button if appropriate.
         if (viewModel.name != "No item found" && viewModel.name != "<Empty>") {
             Button(onClick = {
-                Log.d("AddFoodActivity", "Button clicked")
+                d("AddFoodActivity", "Button clicked")
                 val currentDateToAdd: String = currentDate!!  // Current date passed from intent
                 val foodNameToAdd: String =
                     (viewModel.name!!).replaceFirstChar { it.uppercase() }  // Capitalize food name
@@ -392,6 +441,7 @@ fun AddFoodScreen(
                 val foodFatToAdd: Double = viewModel.fat!!
                 val foodProteinToAdd: Double = viewModel.protein!!
                 val foodCarbsToAdd: Double = viewModel.carbs!!
+                val foodServingsToAdd: Double = viewModel.servingSize!!
 
                 // Add the corresponding data to the database.
                 /* ------------------------------------------------------------------------------------------- */
