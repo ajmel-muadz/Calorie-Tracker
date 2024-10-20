@@ -148,6 +148,8 @@ fun AddFoodScreen(
 
     var image by remember { mutableStateOf<Bitmap?>(null) }
 
+    var hasSearched by remember { mutableStateOf(false) }
+
     // Launcher for taking a picture with the camera.
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
@@ -215,7 +217,12 @@ fun AddFoodScreen(
 
                     // Trim leading and trailing whitespaces
                     searchKey = searchKey.trimStart().trimEnd()
-                    viewModel.fetchItems(searchKey)
+                    if (searchKey == "") {
+                        hasSearched = false
+                    } else {
+                        hasSearched = true
+                        viewModel.fetchItems(searchKey)
+                    }
                 }) {
                     Icon(
                         imageVector = Icons.Filled.Search,
@@ -380,7 +387,7 @@ fun AddFoodScreen(
             }
 
             // If no food item is found we launch an activity allowing for manual input.
-            if (viewModel.name == "No item found") {
+            if (viewModel.name == "No item found" && searchKey != "" && hasSearched) {
                 launchAddNutritionActivity(
                     context,
                     searchKey,
@@ -476,7 +483,6 @@ fun AddFoodScreen(
                 val foodFatToAdd: Double = viewModel.fat!!
                 val foodProteinToAdd: Double = viewModel.protein!!
                 val foodCarbsToAdd: Double = viewModel.carbs!!
-                val foodServingsToAdd: Double = viewModel.servingSize!!
 
                 // Add the corresponding data to the database.
                 /* ------------------------------------------------------------------------------------------- */

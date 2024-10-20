@@ -45,15 +45,6 @@ data class Food(
     val dateString: String
 )
 
-data class DateWithFoods(
-    @Embedded val date: Date,
-    @Relation(
-        parentColumn = "dateString",
-        entityColumn = "dateString"
-    )
-    val foods: List<Food>
-)
-
 @Entity(tableName = "user_goals")
 data class UserGoals(
     @PrimaryKey val id: Int = 1,
@@ -62,9 +53,6 @@ data class UserGoals(
     val proteinGoal: Double,
     val carbGoal: Double
 )
-
-
-
 
 @Dao
 interface DateWithFoodsDao {

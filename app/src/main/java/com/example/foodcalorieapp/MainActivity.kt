@@ -303,11 +303,6 @@ fun SingleFood(foodDisplay: FoodDisplay,
                             fontWeight = FontWeight.SemiBold
                         )
 
-                        Text(
-                            text = "${foodDisplay.servingSize}g serving size",
-                            fontSize = 12.sp
-                        )
-
                         // Display food macros.
                         Text(
                             text = "${foodDisplay.calories} kcal",

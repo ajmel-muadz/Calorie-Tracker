@@ -97,7 +97,7 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Enter macros per serving for $invalidFoodName (Serving size is 100g)",
+                text = "Enter macros for $invalidFoodName",
                 fontSize = 20.sp,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
