@@ -216,7 +216,7 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 val foodCarbs = food.carbs
                 val foodMealType = food.mealType
                 val foodId = food.id
-                val foodMealType = food.mealType
+
 
                 Log.d("FoodLog", "Food Name: $foodName, Calories: $foodCalories, Fat: $foodFat, Protein: $foodProtein, Carbs: $foodCarbs, ID: $foodId")
 
