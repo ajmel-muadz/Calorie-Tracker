@@ -678,6 +678,9 @@ fun SummaryCard(viewModel: AppViewModel) {
     var showDialog by remember { mutableStateOf(false) } // State to control dialog visibility
     val context = LocalContext.current
 
+    val defaultTextColor = Color.Black
+    val goalMetColor = Color(0xFF418341)
+
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 15.dp),
         modifier = Modifier
@@ -710,23 +713,28 @@ fun SummaryCard(viewModel: AppViewModel) {
             // Display the main calories summary
             Text(
                 text = "Calories: ${String.format("%.2f", viewModel.totalCalories)} / ${String.format("%.2f", viewModel.caloriesGoal)} kcal",
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                        color = if (viewModel.totalCalories >= viewModel.caloriesGoal) goalMetColor else defaultTextColor
             )
+
 
             if (isExpanded) {
                 // Show expanded details
                 Column {
                     Text(
                         text = "${String.format("%.2f", viewModel.totalFat)}g fat / ${String.format("%.2f", viewModel.fatGoal)}g",
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = if (viewModel.totalFat >= viewModel.fatGoal) goalMetColor else defaultTextColor
                     )
                     Text(
                         text = "${String.format("%.2f", viewModel.totalProtein)}g protein / ${String.format("%.2f", viewModel.proteinGoal)}g",
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = if (viewModel.totalProtein >= viewModel.proteinGoal) goalMetColor else defaultTextColor
                     )
                     Text(
                         text = "${String.format("%.2f", viewModel.totalCarbs)}g carbs / ${String.format("%.2f", viewModel.carbGoal)}g",
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = if (viewModel.totalCarbs >= viewModel.carbGoal) goalMetColor else defaultTextColor
                     )
                 }
             }
