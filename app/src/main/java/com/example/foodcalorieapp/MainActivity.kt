@@ -123,6 +123,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.ColorFilter
 
 
 // Constants are defined here.
@@ -138,12 +139,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
+        // Setting up the appViewModel with current Context
         appViewModel.setContext(this)
 
+        // Setting up the database and Dao
         val dao = AppDatabase.getInstance(this).dateWithFoodsDao
 
 
+        // Setting up the UI components for the app
         setContent {
             FoodCalorieAppTheme {
                 val returnCurrentDate = intent.getStringExtra("RETURN_CURRENT_DATE")
@@ -163,8 +166,8 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current;
 
-    viewModel.refreshDailySummary()
-    var totalCalories by remember { mutableStateOf(0.0) }
+    viewModel.refreshDailySummary() // Refresh the daily summary
+    var totalCalories by remember { mutableStateOf(0.0) } // State variable to hold total calories
 
     Column(
         modifier = Modifier
@@ -178,7 +181,10 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
         Spacer(modifier = Modifier.height(5.dp))  // Add some space between date switcher and list.
 
 
+        // This code block is responsible for updating the total calories displayed.
+        /* ----------------------------------------------------------------------------- */
         LaunchedEffect(viewModel.formattedDate) {
+            // Refresh the total calories displayed to match the current date's food
             scope.launch {
                 val foodsForDate = dateWithFoodsDao.getFoodsWithDate(viewModel.formattedDate)
                 totalCalories = foodsForDate.sumOf { it.calories }
@@ -232,7 +238,7 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
 
 
 
-        SummaryCard(viewModel = viewModel)
+        SummaryCard(viewModel = viewModel) // Displaying the summary card then a spacer below it.
 
         Spacer(modifier = Modifier.height(5.dp))
 
@@ -342,23 +348,25 @@ fun SingleFood(foodDisplay: FoodDisplay,
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable { onEditClicked(foodDisplay) },
+                            .clickable { onEditClicked(foodDisplay) }, // Clickable icon for editing a food.
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = "Edit a food's properties.",
+                            tint = Color(0xFF03738C)
                         )
                     }
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable { onDeleteClicked(foodDisplay) },
+                            .clickable { onDeleteClicked(foodDisplay) }, // Clickable icon for deleting a food.
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Delete,
                             contentDescription = "Delete a food from the day's log.",
+                            tint = Color(0xFF03738C)
                         )
                     }
                     Box(
@@ -376,12 +384,14 @@ fun SingleFood(foodDisplay: FoodDisplay,
                             if (expanded.value) {
                                 Icon(
                                     imageVector = Icons.Filled.KeyboardArrowUp,
-                                    contentDescription = "Search button for searching for food."
+                                    contentDescription = "Search button for searching for food.",
+                                    tint = Color(0xFF03738C)
                                 )
                             } else {
                                 Icon(
                                     imageVector = Icons.Filled.KeyboardArrowDown,
-                                    contentDescription = "Search button for searching for food."
+                                    contentDescription = "Search button for searching for food.",
+                                    tint = Color(0xFF03738C)
                                 )
                             }
                         }
@@ -401,7 +411,7 @@ fun SingleFood(foodDisplay: FoodDisplay,
 
                         val imageString: String? = viewModel.getMealImageById(foodDisplay.id) // Get the image string from the firebase storage
 
-                        delay(2000)
+                        delay(1000)
 
                         // Decode the image string into a Bitmap
                         if (!imageString.isNullOrEmpty()) {
@@ -459,16 +469,23 @@ fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier,
     }
 }
 
+
+/* Method: handleEditFood
+ * Description: Handles the editing of a food item.
+ */
 fun handleEditFood(foodDisplay: FoodDisplay, context: Context, dateWithFoodsDao: DateWithFoodsDao, viewModel: AppViewModel) {
 
+    // Get the selected date
     val selectedDateString = viewModel.formattedDate
 
+    // Launch a coroutine to perform the database operation in the background
     CoroutineScope(Dispatchers.Main).launch {
 
         // Retrieving the Food item using the name and the selected date
         val foodList = dateWithFoodsDao.getFoodsWithDate(selectedDateString)
         val foodToEdit = foodList.find { it.name == foodDisplay.name }
 
+        // Handle the result of the database operation
         foodToEdit?.let {
             launchEditFoodActivity(context, it, viewModel)
         } ?: run {
@@ -478,7 +495,14 @@ fun handleEditFood(foodDisplay: FoodDisplay, context: Context, dateWithFoodsDao:
 }
 
 
-
+/* Method: handleDeleteFood
+ * Description: Handles the deletion of a food item.
+ * Params: foodDisplay - The food item to be deleted.
+ *         context - The application context.
+ *         viewModelScope - The coroutine scope for the ViewModel.
+ *         dateWithFoodsDao - The DAO for interacting with the database.
+ *         viewModel - The ViewModel instance.
+ */
 fun handleDeleteFood(
     foodDisplay: FoodDisplay,
     context: Context,
@@ -486,6 +510,7 @@ fun handleDeleteFood(
     dateWithFoodsDao: DateWithFoodsDao,
     viewModel: AppViewModel
 ) {
+    // Get the selected date
     val selectedDateString = viewModel.formattedDate
 
     viewModelScope.launch {
@@ -518,15 +543,24 @@ fun handleDeleteFood(
                 }
             }
 
+            // Refresh the foods list
             refreshFoodsList(viewModel, dateWithFoodsDao, selectedDateString)
             restartMainActivity(context, selectedDateString, viewModel.calendarDate.timeInMillis)
 
+            // Show a toast message for exceptions
         } ?: run {
             Toast.makeText(context, "Food not found!", Toast.LENGTH_SHORT).show()
         }
     }
 }
 
+
+/* Method: refreshFoodsList
+ * Description: Refreshes the list of foods for a specific date.
+ * Params: viewModel - The ViewModel instance.
+ *         dateWithFoodsDao - The DAO for interacting with the database.
+ *         date - The date for which to refresh the list.
+ */
 fun refreshFoodsList(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao, date: String) {
     viewModel.viewModelScope.launch {
         // Refresh the foods list from the database
@@ -537,21 +571,35 @@ fun refreshFoodsList(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao
 }
 
 
-
+/* Method: restartMainActivity
+ * Description: Restarts the main activity with the updated date.
+ * Params: context - The application context.
+ *         date - The updated date.
+ */
 private fun restartMainActivity(context: Context, date: String, dateInMillis: Long) {
+
+    // Create an intent to restart the main activity
     val intent = Intent(context, MainActivity::class.java).apply {
+        // Adding the correct date and dateInMillis to the intent
         putExtra("RETURN_CURRENT_DATE", date)
         putExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", dateInMillis)
 
     }
-    context.startActivity(intent)
+    context.startActivity(intent) // Start the activity
 }
 
 
 
-
+/* Method: launchEditFoodActivity
+ * Description: Launches the edit food activity.
+ * Params: context - The application context.
+ *         food - The food item to be edited.
+ *         viewModel - The ViewModel instance.
+ */
 private fun launchEditFoodActivity(context: Context, food: Food, viewModel: AppViewModel) {
+    // Create an intent to launch the edit food activity
     val intent = Intent(context, EditFoodActivity::class.java).apply {
+        // Adding the food details to the intent
         putExtra("FOOD_ID", food.id)
         putExtra("FOOD_NAME", food.name)
         putExtra("FOOD_CALORIES", food.calories)
@@ -561,7 +609,8 @@ private fun launchEditFoodActivity(context: Context, food: Food, viewModel: AppV
         putExtra("CURRENT_DATE_STRING", food.dateString)
         putExtra("CURRENT_DATE_TIME_IN_MILLIS", viewModel.calendarDate.timeInMillis)
     }
-    context.startActivity(intent)
+
+    context.startActivity(intent) // Start the activity
 }
 
 /*
@@ -587,6 +636,7 @@ fun PreviousDay(viewModel: AppViewModel) {
         Image(
             painter = painterResource(id = DATE_ARROW_ICONS),
             contentDescription = "Button to go to the previous day",
+            colorFilter = ColorFilter.tint(Color(0xFF03738C)),
             modifier = Modifier
                 .size(25.dp)
                 .scale(scaleX = -1f, scaleY = 1f)  // Responsible for 'mirroring' icon.
@@ -604,6 +654,7 @@ fun NextDay(viewModel: AppViewModel) {
     ) {
         Image(
             painter = painterResource(id = DATE_ARROW_ICONS),
+            colorFilter = ColorFilter.tint(Color(0xFF03738C)),
             contentDescription = "Button to go to the next day",
             modifier = Modifier
                 .size(25.dp)
@@ -681,6 +732,10 @@ private fun launchAddFoodActivity(context: Context, viewModel: AppViewModel) {
 }
 
 
+
+/* Method: SummaryCard
+ * Description: Displays a summary card with nutritional goals.
+ */
 @Composable
 fun SummaryCard(viewModel: AppViewModel) {
     var isExpanded by remember { mutableStateOf(false) } // State to track expansion
@@ -690,7 +745,10 @@ fun SummaryCard(viewModel: AppViewModel) {
     val defaultTextColor = Color.Black
     val goalMetColor = Color(0xFF418341)
 
+    // Card for displaying nutritional goals and summary
     ElevatedCard(
+        // Styling
+        shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 15.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -714,7 +772,8 @@ fun SummaryCard(viewModel: AppViewModel) {
                 }) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit Daily Goal"
+                        contentDescription = "Edit Daily Goal",
+                        tint = Color(0xFF03738C)
                     )
                 }
             }
@@ -752,6 +811,7 @@ fun SummaryCard(viewModel: AppViewModel) {
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = "Toggle More Info",
+                tint = Color(0xFF03738C),
                 modifier = Modifier
                     .size(24.dp)
                     .clickable { isExpanded = !isExpanded } // Toggle the state
@@ -760,9 +820,10 @@ fun SummaryCard(viewModel: AppViewModel) {
         }
     }
 
-
+    // Show the edit dialog if showDialog is true (will be set to true when the edit icon is clicked)
     if (showDialog) {
         EditGoalDialog(
+            // Pass the ViewModel to the dialog
             viewModel = viewModel,
             onDismiss = { showDialog = false },
             onSave = {
@@ -773,17 +834,27 @@ fun SummaryCard(viewModel: AppViewModel) {
     }
 
 }
+
+/* Method: EditGoalDialog
+ * Description: Displays a dialog for editing nutritional goals.
+ * Params: viewModel - The ViewModel instance.
+ *         onDismiss - Callback to be invoked when the dialog is dismissed.
+ *         onSave - Callback to be invoked when the save button is clicked.
+ */
 @Composable
 fun EditGoalDialog(
     viewModel: AppViewModel,
     onDismiss: () -> Unit,
     onSave: () -> Unit
 ) {
+
+    // State variables for the dialog's text fields
     var newCalorieGoal by remember { mutableStateOf(viewModel.caloriesGoal.toString()) }
     var newFatGoal by remember { mutableStateOf(viewModel.fatGoal.toString()) }
     var newProteinGoal by remember { mutableStateOf(viewModel.proteinGoal.toString()) }
     var newCarbGoal by remember { mutableStateOf(viewModel.carbGoal.toString()) }
 
+    // AlertDialog for editing nutritional goals
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(text = "Edit Nutritional Goals") },
@@ -815,7 +886,7 @@ fun EditGoalDialog(
                 )
             }
         },
-        confirmButton = {
+        confirmButton = { // Save button
             Button(onClick = {
                 // Save to ViewModel and Database
                 viewModel.updateNutritionalGoals(
@@ -829,6 +900,7 @@ fun EditGoalDialog(
                 Text("Save")
             }
         },
+        // Cancel button
         dismissButton = {
             Button(onClick = onDismiss) {
                 Text("Cancel")
@@ -836,9 +908,6 @@ fun EditGoalDialog(
         }
     )
 }
-
-
-
 
 @Composable
 fun SearchFoodButton(viewModel: AppViewModel) {
@@ -939,5 +1008,3 @@ fun PreviewMainAppWithMockData() {
         dateWithFoodsDao = mockDao
     )
 } */
-
-

@@ -58,8 +58,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+
+import androidx.compose.foundation.layout.size
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -142,6 +146,7 @@ fun AddFoodScreen(
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var hasSearched by remember { mutableStateOf(false) }
 
     var searchKey by remember { mutableStateOf("") }  // Variable for search term
 
@@ -233,7 +238,8 @@ fun AddFoodScreen(
                 }) {
                     Icon(
                         imageVector = Icons.Filled.Search,
-                        contentDescription = "Search button for searching for food."
+                        contentDescription = "Search button for searching for food.",
+                        tint = Color(0xFF03738C)
                     )
                 }
             },
@@ -242,6 +248,16 @@ fun AddFoodScreen(
                 .padding(10.dp)
         )
         /* --------------------------------------------------------------------------- */
+        if(viewModel.name != "<Empty>" && viewModel.name != "No item found"){
+            Column(
+                modifier = Modifier
+                    .weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Show loading indicator when searching for food.
+                if (viewModel.loading) {
+                    CircularProgressIndicator()
+                }
 
         // Card to display food found in the API call.
         Column(
@@ -257,6 +273,9 @@ fun AddFoodScreen(
             // Display the values retrieved from the API call.
             /* -------------------------------------------------------------------------- */
             if (viewModel.name != "<Empty>" && viewModel.name != "No item found") {
+                // Display the values retrieved from the API call.
+                /* -------------------------------------------------------------------------- */
+
                 //Set standard metrics
                 LaunchedEffect(viewModel.name) {
                     cals = viewModel.calories!!
@@ -365,7 +384,6 @@ fun AddFoodScreen(
                 }
                 /* -------------------------------------------------------------------------- */
 
-
                 // Drop down menu allowing a user to choose their meal type.
                 /* -------------------------------------------------------------------------- */
                 val mealOptions = listOf("Breakfast", "Lunch", "Dinner", "Snack")
@@ -401,32 +419,34 @@ fun AddFoodScreen(
             }
             /* -------------------------------------------------------------------------- */
 
-            // Display the image Box when an image is captured
-            if (showImageBox) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                /* -------------------------------------------------------------------------- */
 
-                    image?.let { bitmap -> // If an image is captured, display it.
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(10.dp))
-                        )
-                    } ?: run{ // If no image is captured, display a message.
-                        Text (
-                            text = "No image captured",
-                            modifier = Modifier.align(Alignment.Center),
-                        )
+                // Display the image Box when an image is captured
+                if (showImageBox) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+
+                        image?.let { bitmap -> // If an image is captured, display it.
+                            Image(
+                                bitmap = bitmap.asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(10.dp))
+                            )
+                        } ?: run{ // If no image is captured, display a message.
+                            Text (
+                                text = "No image captured",
+                                modifier = Modifier.align(Alignment.Center),
+                            )
+                        }
+
                     }
-
                 }
-            }
 
             // If no food item is found we launch an activity allowing for manual input.
             if (viewModel.name == "No item found" && searchKey != "" && hasSearched) {
@@ -440,78 +460,83 @@ fun AddFoodScreen(
             }
         }
 
-        IconButton(onClick = {
-            focusManager.clearFocus()  // Clear cursor focus.
-            keyboardController?.hide()
+            IconButton(onClick = {
+                focusManager.clearFocus()  // Clear cursor focus.
+                keyboardController?.hide()
 
-            showDialog = true // Show the dialog that allows for selecting an image.
-        }) {
-            Icon(
-                imageVector = Icons.Default.Image,
-                contentDescription = "Edit a food's properties.",
-            )
-        }
+                showDialog = true // Show the dialog that allows for selecting an image.
+            },
+                modifier = Modifier
+                    .size(50.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Image,
+                    contentDescription = null,
+                    tint = Color(0xFF03738C)
+                )
+            }
 
-        // Show dialog when user clicks on the image icon.
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = {
-                    showDialog = false
-                },
-                title = {
-                    Text(
-                        text = "        Choose an Action",
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
+            // Show dialog when user clicks on the image icon.
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showDialog = false
+                    },
+                    title = {
+                        Text(
+                            text = "        Choose an Action",
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Button(
+                                    onClick = {
+                                        showDialog = false
+                                        showImageBox = true
+
+                                        // Check for camera permission.
+                                        if (ContextCompat.checkSelfPermission(
+                                                context,
+                                                Manifest.permission.CAMERA
+                                            ) == PackageManager.PERMISSION_GRANTED
+                                        ) {
+                                            cameraLauncher.launch(null) // Launch the camera
+                                        } else {
+                                            permissionLauncher.launch(Manifest.permission.CAMERA) // Request permission
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .padding(bottom = 10.dp)
+                                        .padding(top = 20.dp)
+                                ) {
+                                    Text("Open Camera")
+                                }
+                            }
                             Button(
                                 onClick = {
                                     showDialog = false
                                     showImageBox = true
 
-                                    // Check for camera permission.
-                                    if (ContextCompat.checkSelfPermission(
-                                            context,
-                                            Manifest.permission.CAMERA
-                                        ) == PackageManager.PERMISSION_GRANTED
-                                    ) {
-                                        cameraLauncher.launch(null) // Launch the camera
-                                    } else {
-                                        permissionLauncher.launch(Manifest.permission.CAMERA) // Request permission
-                                    }
+                                    galleryLauncher.launch("image/*") // Launch the gallery
                                 },
                                 modifier = Modifier
                                     .padding(bottom = 10.dp)
-                                    .padding(top = 20.dp)
                             ) {
-                                Text("Open Camera")
+                                Text("Select From Gallery")
                             }
                         }
-                        Button(
-                            onClick = {
-                                showDialog = false
-                                showImageBox = true
-
-                                galleryLauncher.launch("image/*") // Launch the gallery
-                            },
-                            modifier = Modifier
-                                .padding(bottom = 10.dp)
-                        ) {
-                            Text("Select From Gallery")
-                        }
-                    }
-                },
-                confirmButton = {},
-                dismissButton = {}
-            )
+                    },
+                    confirmButton = {},
+                    dismissButton = {}
+                )
+            }
         }
 
         // Show the 'Add Food' button if appropriate.
@@ -526,6 +551,7 @@ fun AddFoodScreen(
                 val foodProteinToAdd: Double = viewModel.protein!!
                 val foodCarbsToAdd: Double = viewModel.carbs!!
                 val foodMealTypeToAdd: String = viewModel.mealType
+                val foodServingsToAdd: Double = viewModel.servingSize!!
 
                 // Add the corresponding data to the database.
                 /* ------------------------------------------------------------------------------------------- */
@@ -659,7 +685,3 @@ fun PreviewAddFoodScreen() {
         currentDateTimeInMillis = System.currentTimeMillis()
     )
 } */
-
-
-
-

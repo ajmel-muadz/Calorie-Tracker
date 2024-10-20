@@ -4,6 +4,13 @@
 // 1. https://stackoverflow.com/questions/65648904/android-jetpack-compose-and-xml-in-activity
 /* -------------------------------------------------------------------------------- */
 
+/*
+ * Module: EditFoodActivity
+ * Description: Manages the activity for editing the details of a food item, including updating its nutritional values and handling UI interactions.
+ * Author: Ahmed
+ * ID: 21467369
+ */
+
 package com.example.foodcalorieapp
 
 import android.content.Intent
@@ -35,11 +42,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
+/*
+ * Class: EditFoodActivity
+ * Description: Handles the user interface for editing existing food entries. Allows users to modify nutritional details and save changes.
+ */
 class EditFoodActivity : ComponentActivity() {
 
+    // ViewModel for accessing application data
     private val appViewModel: AppViewModel by viewModels()
 
-
+    // UI elements for user input and action buttons
     private lateinit var nameEditText: EditText
     private lateinit var caloriesEditText: EditText
     private lateinit var fatEditText: EditText
@@ -48,12 +60,18 @@ class EditFoodActivity : ComponentActivity() {
     private lateinit var saveButton: Button
     private lateinit var backButton: Button
 
+    /*
+     * Method: onCreate
+     * Description: Initializes the activity, retrieves data passed via intent, sets up UI components, and populates the fields with existing data.
+     * Params:
+     *   savedInstanceState - Bundle containing saved state data
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appViewModel.setContext(this)
         setContentView(R.layout.edit_food_activity)
 
-        // Get the data passed to this activity
+        // Retrieve data passed from previous activity
         val foodId = intent.getLongExtra("FOOD_ID", 0)
         val foodName = intent.getStringExtra("FOOD_NAME") ?: ""
         val foodCalories = intent.getDoubleExtra("FOOD_CALORIES", 0.0)
@@ -62,16 +80,17 @@ class EditFoodActivity : ComponentActivity() {
         val foodCarbs = intent.getDoubleExtra("FOOD_CARBS", 0.0)
         val currentDateString = intent.getStringExtra("CURRENT_DATE_STRING") ?: ""
 
-        // Get the original date and time from the intent;
+        // Original date and time in milliseconds
         val originalCalendarTimeMillis = intent.getLongExtra("CURRENT_DATE_TIME_IN_MILLIS", -1L)
 
-        // A small check as I faced some issues with going back to the previous page.
+        // Use the original date/time if valid, otherwise fallback to ViewModel's calendar time
         val calendarTimeMillis = if (originalCalendarTimeMillis != -1L) {
             originalCalendarTimeMillis
         } else {
             appViewModel.calendarDate.timeInMillis
         }
 
+        // Initialize UI components
         nameEditText = findViewById(R.id.editTextName)
         caloriesEditText = findViewById(R.id.editTextCalories)
         fatEditText = findViewById(R.id.editTextFat)
@@ -80,13 +99,12 @@ class EditFoodActivity : ComponentActivity() {
         saveButton = findViewById(R.id.saveButton)
         backButton = findViewById(R.id.backButton)
 
-        // Set the existing values to my EditTexts
+        // Set initial values to input fields
         nameEditText.setText(foodName)
         caloriesEditText.setText(foodCalories.toString())
         fatEditText.setText(foodFat.toString())
         proteinEditText.setText(foodProtein.toString())
         carbsEditText.setText(foodCarbs.toString())
-
 
         // Embed the radio button group in the ComposeView
         val mealTypeComposeView = findViewById<ComposeView>(R.id.radioButtonComposable)
@@ -124,12 +142,13 @@ class EditFoodActivity : ComponentActivity() {
             appViewModel.mealType = selectedOption
             /* -------------------------------------------------------------------------- */
         }
-
+        
+        // Handle back button click to return to the previous activity
         backButton.setOnClickListener {
             finish()
         }
 
-        // Save the updated food details
+        // Save button click to update food details in the database
         saveButton.setOnClickListener {
             val updatedName = nameEditText.text.toString()
             val updatedCalories = caloriesEditText.text.toString().toDoubleOrNull() ?: 0.0
@@ -137,6 +156,7 @@ class EditFoodActivity : ComponentActivity() {
             val updatedProtein = proteinEditText.text.toString().toDoubleOrNull() ?: 0.0
             val updatedCarbs = carbsEditText.text.toString().toDoubleOrNull() ?: 0.0
 
+            // Create updated food object
             val updatedFood = Food(
                 id = foodId,
                 name = updatedName,
@@ -145,23 +165,29 @@ class EditFoodActivity : ComponentActivity() {
                 protein = updatedProtein,
                 carbs = updatedCarbs,
                 mealType = appViewModel.mealType,
-                dateString = currentDateString // should I keep the dateString to what it was before or change it to the time the food was updated?
+                dateString = currentDateString
             )
 
-            // Updating food details in the database then going back to the previous page
+            // Update the food entry in the database asynchronously
             lifecycleScope.launch {
                 appViewModel.updateFood(updatedFood, this@EditFoodActivity)
 
                 Toast.makeText(this@EditFoodActivity, "Food updated!", Toast.LENGTH_SHORT).show()
 
-                // Return to MainActivity with the exact original date and time
+                // Return to MainActivity with the original date and time
                 launchMainActivityWithDate(currentDateString, calendarTimeMillis)
             }
         }
     }
 
+    /*
+     * Method: launchMainActivityWithDate
+     * Description: Navigates back to the MainActivity, passing back the original date and time.
+     * Params:
+     *   returnCurrentDate - The original date string
+     *   returnCurrentDateTimeInMillis - The original time in milliseconds
+     */
     private fun launchMainActivityWithDate(returnCurrentDate: String, returnCurrentDateTimeInMillis: Long) {
-
         val intent = Intent(this@EditFoodActivity, MainActivity::class.java).apply {
             putExtra("RETURN_CURRENT_DATE", returnCurrentDate)
             putExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", returnCurrentDateTimeInMillis)

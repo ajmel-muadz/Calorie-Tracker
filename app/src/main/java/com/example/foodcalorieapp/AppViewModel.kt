@@ -37,44 +37,65 @@ import java.util.Calendar
 import java.util.Date
 
 class AppViewModel : ViewModel() {
+    // Dao for accessing and interacting with the database
     private var dateWithFoodsDao: DateWithFoodsDao? = null
+
+    // Calender for managing date and time
     var calendarDate by mutableStateOf<Calendar>(Calendar.getInstance())
     var formattedDate by mutableStateOf<String>(SimpleDateFormat.getDateInstance().format(Date()))
 
     var mealType by mutableStateOf("")  // Global variable to hold the meal type.
 
-    // New properties to track nutritional totals
+    // Properties to track nutritional totals and Goals
     var totalCalories by mutableStateOf(0.0)
     var totalFat by mutableStateOf(0.0)
     var totalProtein by mutableStateOf(0.0)
     var totalCarbs by mutableStateOf(0.0)
+
+    // Here is a default kind of Goals that will be set if the user has not set any.
     var fatGoal by mutableStateOf(70.0)
     var proteinGoal by mutableStateOf(50.0)
     var carbGoal by mutableStateOf(300.0)
     var caloriesGoal by mutableStateOf(2000.0)
 
+    // LiveData to hold the list of foods for the current date
     private val _foodsList = MutableLiveData<List<Food>>()
     val foodList: LiveData<List<Food>> = _foodsList
 
-    var selectedImageUri by mutableStateOf<Uri?>(null)
 
-
+    /*
+     * Method: setContext
+     * Description: Initializes the DAO using the provided application context and sets up default goals if not already present.
+     * Params:
+     *   context - Application context for initializing database
+     */
     fun setContext(context: Context) {
-        dateWithFoodsDao = AppDatabase.getInstance(context).dateWithFoodsDao
-        if (dateWithFoodsDao == null) {
 
+        // Initialize the DAO using the provided context (in our case it is the application context)
+        dateWithFoodsDao = AppDatabase.getInstance(context).dateWithFoodsDao
+
+        // If the DAO is null, display a toast message indicating failure to initialize
+        if (dateWithFoodsDao == null) {
             Toast.makeText(context, "Failed to Initialize DAO", Toast.LENGTH_SHORT).show()
         } else {
+            // If the DAO is initialized, initialize default goals and refresh daily summary
             initializeDefaultGoals()
             refreshDailySummary()
             loadUserGoals()
         }
     }
 
-
+    /*
+     * Method: initializeDefaultGoals
+     * Description: Initializes default nutritional goals if not already present in the database.
+     */
     private fun initializeDefaultGoals() {
+
+        // Check if default goals already exist in the database
         viewModelScope.launch {
             val existingGoals = dateWithFoodsDao?.getUserGoals()
+
+            // If default goals do not exist, insert them into the database
             if (existingGoals == null) {
                 val defaultGoals = UserGoals(
                     caloriesGoal = caloriesGoal,
@@ -82,18 +103,31 @@ class AppViewModel : ViewModel() {
                     proteinGoal = proteinGoal,
                     carbGoal = carbGoal
                 )
+
+                // Insert the default goals into the database
                 dateWithFoodsDao?.insertUserGoals(defaultGoals)
             }
         }
     }
 
-
+    /*
+    * Method: updateNutritionalGoals
+    * Description: Updates the user's nutritional goals and stores them in the database.
+    * Params:
+    *   newCaloriesGoal - New caloric intake goal
+    *   newFatGoal - New fat intake goal
+    *   newProteinGoal - New protein intake goal
+    *   newCarbGoal - New carbohydrate intake goal
+    */
     fun updateNutritionalGoals(newCaloriesGoal: Double, newFatGoal: Double, newProteinGoal: Double, newCarbGoal: Double) {
+
+        // Update the local variables with the new goals (not to do with the database)
         caloriesGoal = newCaloriesGoal
         fatGoal = newFatGoal
         proteinGoal = newProteinGoal
         carbGoal = newCarbGoal
 
+        // then we update the database with the new goals
         viewModelScope.launch {
             val userGoals = UserGoals(
                 caloriesGoal = newCaloriesGoal,
@@ -105,7 +139,13 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    /*
+     * Method: loadUserGoals
+     * Description: Loads user's nutritional goals from the database.
+     */
     private fun loadUserGoals() {
+
+        // Load the user's goals from the database (used for when we display the goals on the screen)
         viewModelScope.launch {
             dateWithFoodsDao?.getUserGoals()?.let { savedGoals ->
                 caloriesGoal = savedGoals.caloriesGoal
@@ -117,26 +157,52 @@ class AppViewModel : ViewModel() {
     }
 
 
+    /*
+     * Method: incrementDate
+     * Description: Increments the current date by one day and updates the daily summary.
+     */
     fun incrementDate() {
         val currentDate = this.calendarDate
+
+        // Increment the date by one day
         currentDate.add(Calendar.DAY_OF_MONTH, 1)
+        // Update the formatted date string
         this.formattedDate = SimpleDateFormat.getDateInstance().format(this.calendarDate.timeInMillis)
-        refreshDailySummary()
+        refreshDailySummary() // Refresh the daily summary to show the new date's summary
     }
 
+
+    /*
+     * Method: decrementDate
+     * Description: Decrements the current date by one day and updates the daily summary.
+     */
     fun decrementDate() {
         val currentDate = this.calendarDate
+
+        // Decrement the date by one day
         currentDate.add(Calendar.DAY_OF_MONTH, -1)
+        // Update the formatted date string
         this.formattedDate = SimpleDateFormat.getDateInstance().format(this.calendarDate.timeInMillis)
-        refreshDailySummary()
+        refreshDailySummary() // Refresh the daily summary to show the new date's summary
     }
 
+
+    /*
+     * Method: updateFood
+     * Description: Updates a food entry in the database.
+     * Params:
+     *   food - Food object to be updated
+     *   context - Application context for displaying toast messages
+     */
     fun updateFood(food: Food, context: Context) {
+
+        // Update the food entry in the database asynchronously
         viewModelScope.launch {
+            // Check if the DAO is initialized before attempting to update the food
             if (dateWithFoodsDao != null) {
                 dateWithFoodsDao?.updateFood(food)
                 Toast.makeText(context, "Food updated!", Toast.LENGTH_SHORT).show()
-                refreshDailySummary()
+                refreshDailySummary() // Refresh the daily summary after updating the food
 
             } else {
                 Toast.makeText(context, "DAO not initialized!", Toast.LENGTH_SHORT).show()
@@ -144,8 +210,16 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    /*
+     * Method: refreshDailySummary
+     * Description: Refreshes the daily summary by retrieving food entries for the current date.
+     */
     fun refreshDailySummary() {
+
+        // Retrieve food entries for the current date from the database
         viewModelScope.launch {
+
+            // Check if the DAO is initialized before attempting to retrieve foods
             dateWithFoodsDao?.let { dao ->
                 val foods = dao.getFoodsWithDate(formattedDate)
                 totalCalories = foods.sumOf { it.calories }
@@ -156,13 +230,16 @@ class AppViewModel : ViewModel() {
         }
     }
 
-
-
+    /*
+     * Method: updateFoodsList
+     * Description: Updates the list of foods displayed on the screen.
+     * Params:
+     *   updatedFoods - List of updated food entries
+     */
     fun updateFoodsList(updatedFoods: List<Food>) {
         _foodsList.value = updatedFoods
         refreshDailySummary()
     }
-
 
     // Anything contained in this code block is wholly responsible for API calls.
     /* -------------------------------------------------------------------------------------- */
@@ -209,6 +286,7 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    // Add meal image to firebase
     fun addMealToFirebase(image: Bitmap?, context: Context, id: Long){
 
         // on below line creating an instance of firebase firestore.
