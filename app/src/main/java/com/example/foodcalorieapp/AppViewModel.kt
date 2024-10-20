@@ -26,6 +26,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -45,10 +46,6 @@ class AppViewModel : ViewModel() {
 
     private val _foodsList = MutableLiveData<List<Food>>()
     val foodList: LiveData<List<Food>> = _foodsList
-
-
-    public var _carList = MutableStateFlow<List<Food>>(emptyList())
-    var carList = _carList.asStateFlow()
 
     var selectedImageUri by mutableStateOf<Uri?>(null)
 
@@ -103,9 +100,6 @@ class AppViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>("")
     var loading by mutableStateOf(false)
 
-    private var _meal = MutableStateFlow<MealImage?>(null)
-    var meal = _meal.asStateFlow()
-
     private val apiService = RetrofitInstance.api
 
     // Function to perform the network call.
@@ -145,7 +139,7 @@ class AppViewModel : ViewModel() {
         val db : FirebaseFirestore = FirebaseFirestore.getInstance()
 
         //creating a collection reference for our Firebase Firestore database.
-        val dbMeals: CollectionReference = db.collection("MealImagesMuadz")
+        val dbMeals: CollectionReference = db.collection("MealImagesMouktada")
 
         // convert the bitmap to base64 to store it as a string in the firestore
         val encodedImage: String?
@@ -176,7 +170,7 @@ class AppViewModel : ViewModel() {
         var returnVal: String? = null
 
         try {
-            val querySnapshot = db.collection("MealImagesMuadz")
+            val querySnapshot = db.collection("MealImagesMouktada")
                 .whereEqualTo("id", inId)
                 .get()
                 .await()
@@ -185,6 +179,8 @@ class AppViewModel : ViewModel() {
                 val mealImage = document.toObject(MealImage::class.java)
                 returnVal = mealImage?.image
             }
+
+
 
         }catch(e: Exception){
             Log.e("FirestoreError", "Error getting meal image", e)
@@ -197,7 +193,7 @@ class AppViewModel : ViewModel() {
         val db = FirebaseFirestore.getInstance()
 
         try{
-            val querySnapshot = db.collection("MealImages")
+            val querySnapshot = db.collection("MealImagesMouktada")
                 .whereEqualTo("id", id)
                 .get()
                 .await()
