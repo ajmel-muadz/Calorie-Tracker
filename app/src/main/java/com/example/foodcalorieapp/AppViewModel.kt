@@ -218,7 +218,7 @@ class AppViewModel : ViewModel() {
         val db : FirebaseFirestore = FirebaseFirestore.getInstance()
 
         //creating a collection reference for our Firebase Firestore database.
-        val dbMeals: CollectionReference = db.collection("MealImagesMouktada")
+        val dbMeals: CollectionReference = db.collection("MealImagesMuadz")
 
         // convert the bitmap to base64 to store it as a string in the firestore
         val encodedImage: String?
@@ -249,7 +249,7 @@ class AppViewModel : ViewModel() {
         var returnVal: String? = null
 
         try {
-            val querySnapshot = db.collection("MealImagesMouktada")
+            val querySnapshot = db.collection("MealImagesMuadz")
                 .whereEqualTo("id", inId)
                 .get()
                 .await()
@@ -272,7 +272,7 @@ class AppViewModel : ViewModel() {
         val db = FirebaseFirestore.getInstance()
 
         try{
-            val querySnapshot = db.collection("MealImagesMouktada")
+            val querySnapshot = db.collection("MealImagesMuadz")
                 .whereEqualTo("id", id)
                 .get()
                 .await()
