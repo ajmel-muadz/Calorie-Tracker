@@ -214,6 +214,7 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 val foodFat = food.fat
                 val foodProtein = food.protein
                 val foodCarbs = food.carbs
+                val foodMealType = food.mealType
                 val foodId = food.id
                 val foodMealType = food.mealType
 

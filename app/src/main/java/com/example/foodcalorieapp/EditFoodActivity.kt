@@ -1,3 +1,9 @@
+// Credits...
+/* -------------------------------------------------------------------------------- */
+// Below link helped me with integrating Jetpack Compose modules into XML-based Android
+// 1. https://stackoverflow.com/questions/65648904/android-jetpack-compose-and-xml-in-activity
+/* -------------------------------------------------------------------------------- */
+
 /*
  * Module: EditFoodActivity
  * Description: Manages the activity for editing the details of a food item, including updating its nutritional values and handling UI interactions.
@@ -11,9 +17,28 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Column
@@ -135,7 +160,6 @@ class EditFoodActivity : ComponentActivity() {
             appViewModel.mealType = selectedOption
             /* -------------------------------------------------------------------------- */
         }
-
         // Handle back button click to return to the previous activity
         backButton.setOnClickListener {
             finish()

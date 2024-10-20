@@ -60,7 +60,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+
 import androidx.compose.foundation.layout.size
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -74,6 +79,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -94,6 +100,7 @@ import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -156,6 +163,8 @@ fun AddFoodScreen(
     /* ---------------------------------------------------------------------------------------- */
 
     var image by remember { mutableStateOf<Bitmap?>(null) }
+
+    var hasSearched by remember { mutableStateOf(false) }  // Variable to ensure that a user has searched in the search field.
 
     // Launcher for taking a picture with the camera.
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -266,8 +275,23 @@ fun AddFoodScreen(
                     CircularProgressIndicator()
                 }
 
+        // Card to display food found in the API call.
+        Column(
+            modifier = Modifier
+                .weight(1f),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Show loading indicator when searching for food.
+            if (viewModel.loading) {
+                CircularProgressIndicator()
+            }
+
+            // Display the values retrieved from the API call.
+            /* -------------------------------------------------------------------------- */
+            if (viewModel.name != "<Empty>" && viewModel.name != "No item found") {
                 // Display the values retrieved from the API call.
                 /* -------------------------------------------------------------------------- */
+
                 //Set standard metrics
                 LaunchedEffect(viewModel.name) {
                     cals = viewModel.calories!!
@@ -407,6 +431,8 @@ fun AddFoodScreen(
                 }
                 viewModel.mealType = selectedOption
                 /* -------------------------------------------------------------------------- */
+            }
+            /* -------------------------------------------------------------------------- */
 
                 /* -------------------------------------------------------------------------- */
 
