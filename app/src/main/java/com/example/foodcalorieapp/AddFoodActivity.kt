@@ -100,7 +100,6 @@ import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -164,17 +163,16 @@ fun AddFoodScreen(
 
     var image by remember { mutableStateOf<Bitmap?>(null) }
 
-    var hasSearched by remember { mutableStateOf(false) }  // Variable to ensure that a user has searched in the search field.
 
     // Launcher for taking a picture with the camera.
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? -> // Callback function to handle the captured image.
         if (bitmap != null) {
-            d("AddFoodActivity", "Image captured:" )
+            d("AddFoodActivity", "Image captured:")
             image = bitmap
-        }else{
-            Log.e("Camera Capture ","Failed to capture image")
+        } else {
+            Log.e("Camera Capture ", "Failed to capture image")
         }
     }
 
@@ -182,12 +180,14 @@ fun AddFoodScreen(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
-            uri?.let{
+            uri?.let {
                 val contentResolver = context.contentResolver // Get the content resolver
                 try {
-                    val inputStream = contentResolver.openInputStream(it) // Open the input stream for the selected image
-                    image = android.graphics.BitmapFactory.decodeStream(inputStream) // Decode the image
-                }catch (e: Exception){
+                    val inputStream =
+                        contentResolver.openInputStream(it) // Open the input stream for the selected image
+                    image =
+                        android.graphics.BitmapFactory.decodeStream(inputStream) // Decode the image
+                } catch (e: Exception) {
                     Log.e("AddFoodActivity", "Failed to load image", e)
                 }
             }
@@ -198,7 +198,7 @@ fun AddFoodScreen(
     val permissionLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
-        ) { isGranted: Boolean->
+        ) { isGranted: Boolean ->
             if (isGranted) {
                 Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
                 cameraLauncher.launch(null) // Launch the camera
@@ -264,7 +264,7 @@ fun AddFoodScreen(
         }
 
         /* --------------------------------------------------------------------------- */
-        if(viewModel.name != "<Empty>" && viewModel.name != "No item found"){
+        if (viewModel.name != "<Empty>" && viewModel.name != "No item found") {
             Column(
                 modifier = Modifier
                     .weight(1f),
@@ -275,328 +275,353 @@ fun AddFoodScreen(
                     CircularProgressIndicator()
                 }
 
-        // Card to display food found in the API call.
-        Column(
-            modifier = Modifier
-                .weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Show loading indicator when searching for food.
-            if (viewModel.loading) {
-                CircularProgressIndicator()
-            }
-
-            // Display the values retrieved from the API call.
-            /* -------------------------------------------------------------------------- */
-            if (viewModel.name != "<Empty>" && viewModel.name != "No item found") {
-                // Display the values retrieved from the API call.
-                /* -------------------------------------------------------------------------- */
-
-                //Set standard metrics
-                LaunchedEffect(viewModel.name) {
-                    cals = viewModel.calories!!
-                    fats = viewModel.fat!!
-                    proteins = viewModel.protein!!
-                    carb = viewModel.carbs!!
-                }
-
-                Card(
+                // Card to display food found in the API call.
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp)
-                        .clip(RoundedCornerShape(10.dp)),
-                    colors = CardDefaults.cardColors(containerColor = LIGHTER_BACKGROUND_COLOUR)
+                        .weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier.padding(10.dp)
-                    ) {
-                        viewModel.name?.let {
-                            Text(
-                                text = "Name: $it",
-                                fontSize = 20.sp,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        viewModel.servingSize?.let {
-                            Text(
-                                text = "Serving size: $it",
-                                fontSize = 20.sp,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        viewModel.calories?.let {
-                            Text(
-                                text = "Calories: $it",
-                                fontSize = 20.sp,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        viewModel.fat?.let {
-                            Text(
-                                text = "Fat: $it",
-                                fontSize = 20.sp,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        viewModel.protein?.let {
-                            Text(
-                                text = "Protein: $it",
-                                fontSize = 20.sp,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        viewModel.carbs?.let {
-                            Text(
-                                text = "Carbs: $it",
-                                fontSize = 20.sp,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
+                    // Show loading indicator when searching for food.
+                    if (viewModel.loading) {
+                        CircularProgressIndicator()
+                    }
+
+                    // Display the values retrieved from the API call.
+                    /* -------------------------------------------------------------------------- */
+                    if (viewModel.name != "<Empty>" && viewModel.name != "No item found") {
+                        // Display the values retrieved from the API call.
+                        /* -------------------------------------------------------------------------- */
+
+                        //Set standard metrics
+                        LaunchedEffect(viewModel.name) {
+                            cals = viewModel.calories!!
+                            fats = viewModel.fat!!
+                            proteins = viewModel.protein!!
+                            carb = viewModel.carbs!!
                         }
 
-                        viewModel.errorMessage?.let {
-                            if (it.isNotEmpty()) {
-                                Text(
-                                    text = it,
-                                    color = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.padding(10.dp)
-                                )
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp)
+                                .clip(RoundedCornerShape(10.dp)),
+                            colors = CardDefaults.cardColors(containerColor = LIGHTER_BACKGROUND_COLOUR)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(10.dp)
+                            ) {
+                                viewModel.name?.let {
+                                    Text(
+                                        text = "Name: $it",
+                                        fontSize = 20.sp,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                viewModel.servingSize?.let {
+                                    Text(
+                                        text = "Serving size: $it",
+                                        fontSize = 20.sp,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                viewModel.calories?.let {
+                                    Text(
+                                        text = "Calories: $it",
+                                        fontSize = 20.sp,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                viewModel.fat?.let {
+                                    Text(
+                                        text = "Fat: $it",
+                                        fontSize = 20.sp,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                viewModel.protein?.let {
+                                    Text(
+                                        text = "Protein: $it",
+                                        fontSize = 20.sp,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                viewModel.carbs?.let {
+                                    Text(
+                                        text = "Carbs: $it",
+                                        fontSize = 20.sp,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+
+                                viewModel.errorMessage?.let {
+                                    if (it.isNotEmpty()) {
+                                        Text(
+                                            text = it,
+                                            color = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.padding(10.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
+
+                        /* ----------------------{ Modify Serving Size Input }----------------------- */
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+
+                            TextField(
+                                value = viewModel.servingSize.toString(), // Convert Double to String
+                                onValueChange = { text ->
+                                    // Convert String input back to Double, only if valid
+                                    val number = text.toDoubleOrNull()
+                                    if (number != null) {
+                                        // Update the food values according to the input serving size (by weight)
+                                        viewModel.servingSize = number
+                                        viewModel.carbs =
+                                            BigDecimal(carb * (number / 100)).setScale(
+                                                2,
+                                                RoundingMode.HALF_UP
+                                            ).toDouble()
+                                        viewModel.fat = BigDecimal(fats * (number / 100)).setScale(
+                                            2,
+                                            RoundingMode.HALF_UP
+                                        ).toDouble()
+                                        viewModel.protein =
+                                            BigDecimal(proteins * (number / 100)).setScale(
+                                                2,
+                                                RoundingMode.HALF_UP
+                                            ).toDouble()
+                                        viewModel.calories =
+                                            BigDecimal(cals * (number / 100)).setScale(
+                                                2,
+                                                RoundingMode.HALF_UP
+                                            ).toDouble()
+                                    }
+                                },
+                                label = { Text(text = "Serving size (g)") },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(20.dp),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            )
+                        }
+                        /* -------------------------------------------------------------------------- */
+
+                        // Drop down menu allowing a user to choose their meal type.
+                        /* -------------------------------------------------------------------------- */
+                        val mealOptions = listOf("Breakfast", "Lunch", "Dinner", "Snack")
+                        val (selectedOption, onOptionSelected) = remember {
+                            mutableStateOf(
+                                mealOptions[0]
+                            )
+                        }
+                        // Modifier.selectableGroup() is recommended to use by Google's documentation. I am just following orders.
+                        Column(Modifier.selectableGroup()) {
+                            mealOptions.forEach { text ->
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp)
+                                        .selectable(
+                                            selected = (text == selectedOption),
+                                            onClick = { onOptionSelected(text) },
+                                            role = Role.RadioButton
+                                        )
+                                        .padding(horizontal = 16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = (text == selectedOption),
+                                        onClick = { onOptionSelected(text) })
+                                    Text(
+                                        text = text,
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier.padding(start = 16.dp)
+                                    )
+                                }
+                            }
+                        }
+                        viewModel.mealType = selectedOption
+                        /* -------------------------------------------------------------------------- */
+                    }
+                    /* -------------------------------------------------------------------------- */
+
+                    /* -------------------------------------------------------------------------- */
+
+                    // Display the image Box when an image is captured
+                    if (showImageBox) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+
+                            image?.let { bitmap -> // If an image is captured, display it.
+                                Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(10.dp))
+                                )
+                            } ?: run { // If no image is captured, display a message.
+                                Text(
+                                    text = "No image captured",
+                                    modifier = Modifier.align(Alignment.Center),
+                                )
+                            }
+
+                        }
                     }
                 }
 
-                /* ----------------------{ Modify Serving Size Input }----------------------- */
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
+                IconButton(
+                    onClick = {
+                        focusManager.clearFocus()  // Clear cursor focus.
+                        keyboardController?.hide()
 
-                    TextField(
-                        value = viewModel.servingSize.toString(), // Convert Double to String
-                        onValueChange = { text ->
-                            // Convert String input back to Double, only if valid
-                            val number = text.toDoubleOrNull()
-                            if (number != null) {
-                                // Update the food values according to the input serving size (by weight)
-                                viewModel.servingSize = number
-                                viewModel.carbs = BigDecimal(carb * (number / 100)).setScale(2, RoundingMode.HALF_UP).toDouble()
-                                viewModel.fat = BigDecimal(fats * (number / 100)).setScale(2, RoundingMode.HALF_UP).toDouble()
-                                viewModel.protein = BigDecimal(proteins * (number / 100)).setScale(2, RoundingMode.HALF_UP).toDouble()
-                                viewModel.calories = BigDecimal(cals * (number / 100)).setScale(2, RoundingMode.HALF_UP).toDouble()
-                            }},
-                        label = { Text(text = "Serving size (g)") },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(20.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        showDialog = true // Show the dialog that allows for selecting an image.
+                    },
+                    modifier = Modifier
+                        .size(50.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = null,
+                        tint = Color(0xFF03738C)
                     )
                 }
-                /* -------------------------------------------------------------------------- */
 
-                // Drop down menu allowing a user to choose their meal type.
-                /* -------------------------------------------------------------------------- */
-                val mealOptions = listOf("Breakfast", "Lunch", "Dinner", "Snack")
-                val (selectedOption, onOptionSelected) = remember { mutableStateOf(mealOptions[0]) }
-                // Modifier.selectableGroup() is recommended to use by Google's documentation. I am just following orders.
-                Column(Modifier.selectableGroup()) {
-                    mealOptions.forEach { text ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .selectable(
-                                    selected = (text == selectedOption),
-                                    onClick = { onOptionSelected(text) },
-                                    role = Role.RadioButton
-                                )
-                                .padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(selected = (text == selectedOption), onClick = { onOptionSelected(text) })
+                // Show dialog when user clicks on the image icon.
+                if (showDialog) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            showDialog = false
+                        },
+                        title = {
                             Text(
-                                text = text,
-                                color = Color.White,
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(start = 16.dp)
+                                text = "        Choose an Action",
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
-                        }
-                    }
-                }
-                viewModel.mealType = selectedOption
-                /* -------------------------------------------------------------------------- */
-            }
-            /* -------------------------------------------------------------------------- */
-
-                /* -------------------------------------------------------------------------- */
-
-                // Display the image Box when an image is captured
-                if (showImageBox) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-
-                        image?.let { bitmap -> // If an image is captured, display it.
-                            Image(
-                                bitmap = bitmap.asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(10.dp))
-                            )
-                        } ?: run{ // If no image is captured, display a message.
-                            Text (
-                                text = "No image captured",
-                                modifier = Modifier.align(Alignment.Center),
-                            )
-                        }
-
-                    }
-                }
-        }
-
-            IconButton(onClick = {
-                focusManager.clearFocus()  // Clear cursor focus.
-                keyboardController?.hide()
-
-                showDialog = true // Show the dialog that allows for selecting an image.
-            },
-                modifier = Modifier
-                    .size(50.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Image,
-                    contentDescription = null,
-                    tint = Color(0xFF03738C)
-                )
-            }
-
-            // Show dialog when user clicks on the image icon.
-            if (showDialog) {
-                AlertDialog(
-                    onDismissRequest = {
-                        showDialog = false
-                    },
-                    title = {
-                        Text(
-                            text = "        Choose an Action",
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Row(
-                                horizontalArrangement = Arrangement.Center,
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row(
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            showDialog = false
+                                            showImageBox = true
+
+                                            // Check for camera permission.
+                                            if (ContextCompat.checkSelfPermission(
+                                                    context,
+                                                    Manifest.permission.CAMERA
+                                                ) == PackageManager.PERMISSION_GRANTED
+                                            ) {
+                                                cameraLauncher.launch(null) // Launch the camera
+                                            } else {
+                                                permissionLauncher.launch(Manifest.permission.CAMERA) // Request permission
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .padding(bottom = 10.dp)
+                                            .padding(top = 20.dp)
+                                    ) {
+                                        Text("Open Camera")
+                                    }
+                                }
                                 Button(
                                     onClick = {
                                         showDialog = false
                                         showImageBox = true
 
-                                        // Check for camera permission.
-                                        if (ContextCompat.checkSelfPermission(
-                                                context,
-                                                Manifest.permission.CAMERA
-                                            ) == PackageManager.PERMISSION_GRANTED
-                                        ) {
-                                            cameraLauncher.launch(null) // Launch the camera
-                                        } else {
-                                            permissionLauncher.launch(Manifest.permission.CAMERA) // Request permission
-                                        }
+                                        galleryLauncher.launch("image/*") // Launch the gallery
                                     },
                                     modifier = Modifier
                                         .padding(bottom = 10.dp)
-                                        .padding(top = 20.dp)
                                 ) {
-                                    Text("Open Camera")
+                                    Text("Select From Gallery")
                                 }
                             }
-                            Button(
-                                onClick = {
-                                    showDialog = false
-                                    showImageBox = true
-
-                                    galleryLauncher.launch("image/*") // Launch the gallery
-                                },
-                                modifier = Modifier
-                                    .padding(bottom = 10.dp)
-                            ) {
-                                Text("Select From Gallery")
-                            }
-                        }
-                    },
-                    confirmButton = {},
-                    dismissButton = {}
-                )
-            }
-        }
-
-        // Show the 'Add Food' button if appropriate.
-        if (viewModel.name != "No item found" && viewModel.name != "<Empty>") {
-            Button(onClick = {
-                d("AddFoodActivity", "Button clicked")
-                val currentDateToAdd: String = currentDate!!  // Current date passed from intent
-                val foodNameToAdd: String =
-                    (viewModel.name!!).replaceFirstChar { it.uppercase() }  // Capitalize food name
-                val foodCaloriesToAdd: Double = viewModel.calories!!
-                val foodFatToAdd: Double = viewModel.fat!!
-                val foodProteinToAdd: Double = viewModel.protein!!
-                val foodCarbsToAdd: Double = viewModel.carbs!!
-                val foodMealTypeToAdd: String = viewModel.mealType
-
-                // Add the corresponding data to the database.
-                /* ------------------------------------------------------------------------------------------- */
-                val dateToInsert = Date(currentDateToAdd)
-                val foodToInsert = Food(
-                    name = foodNameToAdd,
-                    calories = foodCaloriesToAdd,
-                    fat = foodFatToAdd,
-                    protein = foodProteinToAdd,
-                    carbs = foodCarbsToAdd,
-                    mealType = foodMealTypeToAdd,
-                    dateString = currentDateToAdd
-                )
-
-                scope.launch {
-                    dateWithFoodsDao.insertDate(dateToInsert)
-                    val id: Long = dateWithFoodsDao.insertFood(foodToInsert)
-
-                    // Add image to the firebase database
-                    viewModel.addMealToFirebase(image, context, id)
+                        },
+                        confirmButton = {},
+                        dismissButton = {}
+                    )
                 }
-                /* ------------------------------------------------------------------------------------------- */
-
-                // Go back to main screen when we add food.
-                launchMainActivity(context, currentDateToAdd, currentDateTimeInMillis)
-
-            }, modifier = Modifier.padding(bottom = 10.dp)) {
-                Text(text = "Add Food")
             }
-        }
 
-        // Show error message if there is any.
-        viewModel.errorMessage?.let {
-            if (it.isNotEmpty()) {
-                Text(
-                    text = it,
-                    color = MaterialTheme.colorScheme.error
-                )
+            // Show the 'Add Food' button if appropriate.
+            if (viewModel.name != "No item found" && viewModel.name != "<Empty>") {
+                Button(onClick = {
+                    d("AddFoodActivity", "Button clicked")
+                    val currentDateToAdd: String = currentDate!!  // Current date passed from intent
+                    val foodNameToAdd: String =
+                        (viewModel.name!!).replaceFirstChar { it.uppercase() }  // Capitalize food name
+                    val foodCaloriesToAdd: Double = viewModel.calories!!
+                    val foodFatToAdd: Double = viewModel.fat!!
+                    val foodProteinToAdd: Double = viewModel.protein!!
+                    val foodCarbsToAdd: Double = viewModel.carbs!!
+                    val foodMealTypeToAdd: String = viewModel.mealType
+
+                    // Add the corresponding data to the database.
+                    /* ------------------------------------------------------------------------------------------- */
+                    val dateToInsert = Date(currentDateToAdd)
+                    val foodToInsert = Food(
+                        name = foodNameToAdd,
+                        calories = foodCaloriesToAdd,
+                        fat = foodFatToAdd,
+                        protein = foodProteinToAdd,
+                        carbs = foodCarbsToAdd,
+                        mealType = foodMealTypeToAdd,
+                        dateString = currentDateToAdd
+                    )
+
+                    scope.launch {
+                        dateWithFoodsDao.insertDate(dateToInsert)
+                        val id: Long = dateWithFoodsDao.insertFood(foodToInsert)
+
+                        // Add image to the firebase database
+                        viewModel.addMealToFirebase(image, context, id)
+                    }
+                    /* ------------------------------------------------------------------------------------------- */
+
+                    // Go back to main screen when we add food.
+                    launchMainActivity(context, currentDateToAdd, currentDateTimeInMillis)
+
+                }, modifier = Modifier.padding(bottom = 10.dp)) {
+                    Text(text = "Add Food")
+                }
+            }
+
+            // Show error message if there is any.
+            viewModel.errorMessage?.let {
+                if (it.isNotEmpty()) {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }
 }
+
 
 private fun launchAddNutritionActivity(context: Context, searchKey: String, currentDate: String?, currentDateTimeInMillis: Long) {
     val intent = Intent(context, AddNutritionActivity::class.java)
@@ -612,3 +637,4 @@ private fun launchMainActivity(context: Context, returnCurrentDate: String?, ret
     intent.putExtra("RETURN_CURRENT_DATE_TIME_IN_MILLIS", returnCurrentDateTimeInMillis)
     context.startActivity(intent)
 }
+
