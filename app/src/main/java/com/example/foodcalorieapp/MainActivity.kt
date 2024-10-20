@@ -214,12 +214,13 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 val foodFat = food.fat
                 val foodProtein = food.protein
                 val foodCarbs = food.carbs
+                val foodMealType = food.mealType
                 val foodId = food.id
 
                 Log.d("FoodLog", "Food Name: $foodName, Calories: $foodCalories, Fat: $foodFat, Protein: $foodProtein, Carbs: $foodCarbs, ID: $foodId")
 
                 val foodToAdd = FoodDisplay(name = foodName, 100.0, calories = foodCalories,
-                    fat = foodFat, protein = foodProtein, carbs = foodCarbs, id = foodId)
+                    fat = foodFat, protein = foodProtein, carbs = foodCarbs, mealType = foodMealType, id = foodId)
 
                 foodsToDisplay.add(foodToAdd)
             }
@@ -330,6 +331,12 @@ fun SingleFood(foodDisplay: FoodDisplay,
                         // Display food macros.
                         Text(
                             text = "${foodDisplay.carbs}g carbs",
+                            fontSize = 12.sp
+                        )
+
+                        // Display meal type.
+                        Text(
+                            text = "Meal type: ${foodDisplay.mealType}",
                             fontSize = 12.sp
                         )
                     }
@@ -606,6 +613,7 @@ private fun launchEditFoodActivity(context: Context, food: Food, viewModel: AppV
     context.startActivity(intent) // Start the activity
 }
 
+/*
 private fun convertToFood(foodDisplay: FoodDisplay): Food {
     return Food(
         name = foodDisplay.name,
@@ -615,7 +623,7 @@ private fun convertToFood(foodDisplay: FoodDisplay): Food {
         carbs = foodDisplay.carbs,
         dateString = "DateStringPlaceholder" // Replace this with the actual date if needed
     )
-}
+} */
 
 @Composable
 fun PreviousDay(viewModel: AppViewModel) {
@@ -911,3 +919,92 @@ fun SearchFoodButton(viewModel: AppViewModel) {
         Text(text = "Search Food")
     }
 }
+
+// Similarly to the other Previews, trying to make a mock preview for this part
+/*
+@Composable
+fun MockAppViewModel(): AppViewModel {
+    return AppViewModel().apply {
+        // Manually set any properties you want to simulate in the preview
+        formattedDate = "2024-10-18"
+        calendarDate.timeInMillis = System.currentTimeMillis()
+
+        // Set mock data directly if needed
+        name = "Sample Food"
+        calories = 150.0
+        fat = 10.0
+        protein = 5.0
+        carbs = 20.0
+    }
+} */
+
+/*
+@Preview(showBackground = true)
+@Composable
+fun PreviewMainAppWithMockData() {
+    // Create a mock ViewModel
+    val mockViewModel = MockAppViewModel().apply {
+        formattedDate = "2024-10-18"
+    }
+
+    // Mock implementation of the DateWithFoodsDao
+    val mockDao = object : DateWithFoodsDao {
+        override suspend fun getFoodsWithDate(dateString: String): List<Food> {
+            return listOf(
+                Food(id = 1, name = "Apple", calories = 95.0, fat = 0.3, protein = 0.5, carbs = 25.0, dateString = dateString),
+                Food(id = 2, name = "Banana", calories = 105.0, fat = 0.4, protein = 1.3, carbs = 27.0, dateString = dateString)
+            )
+        }
+
+        override suspend fun insertDate(date: Date) {
+            // No operation needed for preview
+        }
+
+        override suspend fun insertFood(food: Food): Long {
+            // No operation needed for preview
+            return 1
+        }
+
+        override suspend fun getFoodByIdAndDate(id: Int, dateString: String): Food? {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun getAllFoods(): List<Food> {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun updateFood(food: Food) {
+            // No operation needed for preview
+        }
+
+        override suspend fun deleteFood(food: Food) {
+            // No operation needed for preview
+        }
+
+        override suspend fun resetFoodIdCounter() {
+            // No operation needed for preview
+        }
+
+        override suspend fun deleteDate(date: Date) {
+
+        }
+
+        override suspend fun insertUserGoals(userGoals: UserGoals) {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun updateUserGoals(userGoals: UserGoals) {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun getUserGoals(): UserGoals? {
+            TODO("Not yet implemented")
+        }
+    }
+
+     // Use the existing MainApp but inject mock data via the mock DAO
+    MainApp(
+        viewModel = mockViewModel,
+        dateWithFoodsDao = mockDao
+    )
+} */
