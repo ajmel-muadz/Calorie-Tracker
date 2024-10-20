@@ -23,6 +23,9 @@
 //
 // Below link helped me convert the image retrieved from gallery to a bitmap using content resolver
 // 8. https://www.geeksforgeeks.org/content-providers-in-android-with-example/
+
+// Below link helped with radio button groups in Jetpack Compose.
+// 9. https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#RadioButton(kotlin.Boolean,kotlin.Function0,androidx.compose.ui.Modifier,kotlin.Boolean,androidx.compose.material3.RadioButtonColors,androidx.compose.foundation.interaction.MutableInteractionSource)
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
@@ -41,6 +44,8 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.compose.material3.RadioButton
+import androidx.compose.ui.semantics.Role
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
 import androidx.activity.viewModels
@@ -93,6 +98,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -235,6 +242,18 @@ fun AddFoodScreen(
                 .fillMaxWidth()
                 .padding(10.dp)
         )
+
+        // If no food item is found we launch an activity allowing for manual input.
+        if (viewModel.name == "No item found" && searchKey != "" && hasSearched) {
+            launchAddNutritionActivity(
+                context,
+                searchKey,
+                currentDate,
+                currentDateTimeInMillis
+            )
+            viewModel.name = "<Empty>"
+        }
+
         /* --------------------------------------------------------------------------- */
         if(viewModel.name != "<Empty>" && viewModel.name != "No item found"){
             Column(
@@ -357,6 +376,38 @@ fun AddFoodScreen(
                 }
                 /* -------------------------------------------------------------------------- */
 
+                // Drop down menu allowing a user to choose their meal type.
+                /* -------------------------------------------------------------------------- */
+                val mealOptions = listOf("Breakfast", "Lunch", "Dinner", "Snack")
+                val (selectedOption, onOptionSelected) = remember { mutableStateOf(mealOptions[0]) }
+                // Modifier.selectableGroup() is recommended to use by Google's documentation. I am just following orders.
+                Column(Modifier.selectableGroup()) {
+                    mealOptions.forEach { text ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .selectable(
+                                    selected = (text == selectedOption),
+                                    onClick = { onOptionSelected(text) },
+                                    role = Role.RadioButton
+                                )
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = (text == selectedOption), onClick = { onOptionSelected(text) })
+                            Text(
+                                text = text,
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 16.dp)
+                            )
+                        }
+                    }
+                }
+                viewModel.mealType = selectedOption
+                /* -------------------------------------------------------------------------- */
+
                 /* -------------------------------------------------------------------------- */
 
                 // Display the image Box when an image is captured
@@ -385,17 +436,6 @@ fun AddFoodScreen(
 
                     }
                 }
-
-            // If no food item is found we launch an activity allowing for manual input.
-            if (viewModel.name == "No item found" && searchKey != "" && hasSearched) {
-                launchAddNutritionActivity(
-                    context,
-                    searchKey,
-                    currentDate,
-                    currentDateTimeInMillis
-                )
-                viewModel.name = "<Empty>"
-            }
         }
 
             IconButton(onClick = {
@@ -488,7 +528,7 @@ fun AddFoodScreen(
                 val foodFatToAdd: Double = viewModel.fat!!
                 val foodProteinToAdd: Double = viewModel.protein!!
                 val foodCarbsToAdd: Double = viewModel.carbs!!
-                val foodServingsToAdd: Double = viewModel.servingSize!!
+                val foodMealTypeToAdd: String = viewModel.mealType
 
                 // Add the corresponding data to the database.
                 /* ------------------------------------------------------------------------------------------- */
@@ -499,6 +539,7 @@ fun AddFoodScreen(
                     fat = foodFatToAdd,
                     protein = foodProteinToAdd,
                     carbs = foodCarbsToAdd,
+                    mealType = foodMealTypeToAdd,
                     dateString = currentDateToAdd
                 )
 

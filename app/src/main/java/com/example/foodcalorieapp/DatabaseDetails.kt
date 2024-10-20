@@ -44,6 +44,7 @@ data class Food(
     val fat: Double,
     val protein: Double,
     val carbs: Double,
+    val mealType: String,
     val dateString: String
 )
 

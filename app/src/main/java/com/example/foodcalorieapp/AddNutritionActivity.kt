@@ -10,6 +10,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.ui.semantics.Role
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
@@ -110,7 +118,7 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
             TextField(
                 value = caloriesInput,
                 onValueChange = { caloriesInput = it },
-                label = { Text(text = "Calories per 100g") },
+                label = { Text(text = "Calories") },
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent
@@ -134,7 +142,7 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
             TextField(
                 value = fatInput,
                 onValueChange = { fatInput = it },
-                label = { Text(text = "Fat per 100g") },
+                label = { Text(text = "Fat") },
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent
@@ -158,7 +166,7 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
             TextField(
                 value = proteinInput,
                 onValueChange = { proteinInput = it },
-                label = { Text(text = "Protein per 100g") },
+                label = { Text(text = "Protein") },
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent
@@ -182,7 +190,7 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
             TextField(
                 value = carbsInput,
                 onValueChange = { carbsInput = it },
-                label = { Text(text = "Carbs per 100g") },
+                label = { Text(text = "Carbs") },
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent
@@ -202,6 +210,38 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
                 modifier = Modifier.padding(10.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
+
+            // Drop down menu allowing a user to choose their meal type.
+            /* -------------------------------------------------------------------------- */
+            val mealOptions = listOf("Breakfast", "Lunch", "Dinner", "Snack")
+            val (selectedOption, onOptionSelected) = remember { mutableStateOf(mealOptions[0]) }
+            // Modifier.selectableGroup() is recommended to use by Google's documentation. I am just following orders.
+            Column(Modifier.selectableGroup()) {
+                mealOptions.forEach { text ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .selectable(
+                                selected = (text == selectedOption),
+                                onClick = { onOptionSelected(text) },
+                                role = Role.RadioButton
+                            )
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = (text == selectedOption), onClick = { onOptionSelected(text) })
+                        Text(
+                            text = text,
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(start = 16.dp)
+                        )
+                    }
+                }
+            }
+            viewModel.mealType = selectedOption
+            /* -------------------------------------------------------------------------- */
             /* ---------------------------------------------------------------------------- */
         }
 
@@ -222,12 +262,13 @@ fun AddNutritionScreen(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsD
                 val foodFatToAdd: Double = viewModel.fat!!
                 val foodProteinToAdd: Double = viewModel.protein!!
                 val foodCarbsToAdd: Double = viewModel.carbs!!
+                val foodMealTypeToAdd: String = viewModel.mealType
 
                 // When clicking 'Add Food' we add the corresponding data to the database.
                 /* ------------------------------------------------------------------------------------------- */
                 val dateToInsert = Date(currentDateToAdd)
                 val foodToInsert = Food(name = foodNameToAdd, calories = foodCaloriesToAdd, fat = foodFatToAdd,
-                    protein = foodProteinToAdd, carbs = foodCarbsToAdd, dateString = currentDateToAdd)
+                    protein = foodProteinToAdd, carbs = foodCarbsToAdd, mealType = foodMealTypeToAdd, dateString = currentDateToAdd)
 
                 scope.launch {
                     dateWithFoodsDao.insertDate(dateToInsert)

@@ -45,6 +45,7 @@ class AppViewModel : ViewModel() {
     var calendarDate by mutableStateOf<Calendar>(Calendar.getInstance())
     var formattedDate by mutableStateOf<String>(SimpleDateFormat.getDateInstance().format(Date()))
 
+    var mealType by mutableStateOf("")
 
     // Properties to track nutritional totals and Goals
     var totalCalories by mutableStateOf(0.0)
@@ -294,7 +295,7 @@ class AppViewModel : ViewModel() {
         val db : FirebaseFirestore = FirebaseFirestore.getInstance()
 
         //creating a collection reference for our Firebase Firestore database.
-        val dbMeals: CollectionReference = db.collection("MealImagesMuadz")
+        val dbMeals: CollectionReference = db.collection("MealImages")
 
         // convert the bitmap to base64 to store it as a string in the firestore
         val encodedImage: String?
@@ -325,7 +326,7 @@ class AppViewModel : ViewModel() {
         var returnVal: String? = null
 
         try {
-            val querySnapshot = db.collection("MealImagesMuadz")
+            val querySnapshot = db.collection("MealImages")
                 .whereEqualTo("id", inId)
                 .get()
                 .await()
@@ -347,7 +348,7 @@ class AppViewModel : ViewModel() {
 
         try{
             // Query Firestore for the meal image with the given ID
-            val querySnapshot = db.collection("MealImagesMuadz")
+            val querySnapshot = db.collection("MealImages")
                 .whereEqualTo("id", id)
                 .get()
                 .await()

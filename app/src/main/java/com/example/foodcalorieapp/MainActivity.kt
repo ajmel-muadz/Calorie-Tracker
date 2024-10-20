@@ -215,11 +215,12 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 val foodProtein = food.protein
                 val foodCarbs = food.carbs
                 val foodId = food.id
+                val foodMealType = food.mealType
 
                 Log.d("FoodLog", "Food Name: $foodName, Calories: $foodCalories, Fat: $foodFat, Protein: $foodProtein, Carbs: $foodCarbs, ID: $foodId")
 
                 val foodToAdd = FoodDisplay(name = foodName, 100.0, calories = foodCalories,
-                    fat = foodFat, protein = foodProtein, carbs = foodCarbs, id = foodId)
+                    fat = foodFat, protein = foodProtein, carbs = foodCarbs, mealType = foodMealType, id = foodId)
 
                 foodsToDisplay.add(foodToAdd)
             }
@@ -330,6 +331,12 @@ fun SingleFood(foodDisplay: FoodDisplay,
                         // Display food macros.
                         Text(
                             text = "${foodDisplay.carbs}g carbs",
+                            fontSize = 12.sp
+                        )
+
+                        // Display meal type.
+                        Text(
+                            text = "Meal type: ${foodDisplay.mealType}",
                             fontSize = 12.sp
                         )
                     }
@@ -604,17 +611,6 @@ private fun launchEditFoodActivity(context: Context, food: Food, viewModel: AppV
     }
 
     context.startActivity(intent) // Start the activity
-}
-
-private fun convertToFood(foodDisplay: FoodDisplay): Food {
-    return Food(
-        name = foodDisplay.name,
-        calories = foodDisplay.calories,
-        fat = foodDisplay.fat,
-        protein = foodDisplay.protein,
-        carbs = foodDisplay.carbs,
-        dateString = "DateStringPlaceholder" // Replace this with the actual date if needed
-    )
 }
 
 @Composable

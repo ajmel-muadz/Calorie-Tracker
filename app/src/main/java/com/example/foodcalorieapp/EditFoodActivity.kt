@@ -16,6 +16,25 @@ import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
+import android.widget.RadioButton
 
 /*
  * Class: EditFoodActivity
@@ -81,6 +100,42 @@ class EditFoodActivity : ComponentActivity() {
         proteinEditText.setText(foodProtein.toString())
         carbsEditText.setText(foodCarbs.toString())
 
+        // Embed the radio button group in the ComposeView
+        val mealTypeComposeView = findViewById<ComposeView>(R.id.radioButtonComposable)
+        mealTypeComposeView.setContent {
+            // Drop down menu allowing a user to choose their meal type.
+            /* -------------------------------------------------------------------------- */
+            val mealOptions = listOf("Breakfast", "Lunch", "Dinner", "Snack")
+            val (selectedOption, onOptionSelected) = remember { mutableStateOf(mealOptions[0]) }
+            // Modifier.selectableGroup() is recommended to use by Google's documentation. I am just following orders.
+            Column(Modifier.selectableGroup()) {
+                mealOptions.forEach { text ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .selectable(
+                                selected = (text == selectedOption),
+                                onClick = { onOptionSelected(text) },
+                                role = Role.RadioButton
+                            )
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = (text == selectedOption), onClick = { onOptionSelected(text) })
+                        Text(
+                            text = text,
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(start = 16.dp)
+                        )
+                    }
+                }
+            }
+            appViewModel.mealType = selectedOption
+            /* -------------------------------------------------------------------------- */
+        }
+
         // Handle back button click to return to the previous activity
         backButton.setOnClickListener {
             finish()
@@ -102,6 +157,7 @@ class EditFoodActivity : ComponentActivity() {
                 fat = updatedFat,
                 protein = updatedProtein,
                 carbs = updatedCarbs,
+                mealType = appViewModel.mealType,
                 dateString = currentDateString
             )
 
