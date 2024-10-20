@@ -95,6 +95,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Environment
 import android.util.Base64
+import android.util.Log
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
@@ -104,13 +105,16 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import androidx.compose.runtime.saveable.rememberSaveable
 
 
 // Constants are defined here.
@@ -186,6 +190,8 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 val foodCarbs = food.carbs
                 val foodId = food.id
 
+                Log.d("FoodLog", "Food Name: $foodName, Calories: $foodCalories, Fat: $foodFat, Protein: $foodProtein, Carbs: $foodCarbs, ID: $foodId")
+
                 val foodToAdd = FoodDisplay(name = foodName, 100.0, calories = foodCalories,
                     fat = foodFat, protein = foodProtein, carbs = foodCarbs, id = foodId)
 
@@ -216,8 +222,8 @@ fun SingleFood(foodDisplay: FoodDisplay,
                onDeleteClicked: (FoodDisplay) -> Unit,
                viewModel: AppViewModel){
 
-
     var decodedImage by remember { mutableStateOf<Bitmap?>(null) }
+    var loadingImage by remember { mutableStateOf(false) }
 
     val expanded = remember { mutableStateOf(false) }
     val extraPadding by animateDpAsState(
@@ -227,7 +233,6 @@ fun SingleFood(foodDisplay: FoodDisplay,
             stiffness = Spring.StiffnessLow
         )
     )
-
 
     Card(
         modifier = Modifier
@@ -318,7 +323,7 @@ fun SingleFood(foodDisplay: FoodDisplay,
                     Box(
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable { onDeleteClicked (foodDisplay) },
+                            .clickable { onDeleteClicked(foodDisplay) },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -359,29 +364,45 @@ fun SingleFood(foodDisplay: FoodDisplay,
 
                 ) {
                     LaunchedEffect(foodDisplay.id) {
+                        Log.d("FoodLog", "Food ID: ${foodDisplay.id}")
+
+                        loadingImage = true
+
                         val imageString: String? = viewModel.getMealImageById(foodDisplay.id)
+
+                        delay(2000)
+
 
                         if (!imageString.isNullOrEmpty()){
                             val imageBytes = Base64.decode(imageString, Base64.DEFAULT)
                             decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                         }
-                    }
 
-                    if (decodedImage != null){
-                        Image(
-                            bitmap = decodedImage!!.asImageBitmap(),
-                            contentDescription = "Captured Image",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .aspectRatio(2f)
-                        )
-                    } else {
-                        // Display a placeholder or loading indicator
-                        Text(
-                            text = "Loading image...",
+                        loadingImage = false
+                    }
+                     if (loadingImage){
+                            CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center)
                         )
-                    }
+                    }else{
+                         // Display the image if it's not null
+                         if (decodedImage != null){
+                             Image(
+                                 bitmap = decodedImage!!.asImageBitmap(),
+                                 contentDescription = "Captured Image",
+                                 modifier = Modifier
+                                     .fillMaxSize()
+                                     .aspectRatio(2f)
+                             )
+                         }
+                         else {
+                             // Display a placeholder or loading indicator
+                             Text(
+                                 text = "No Image Found",
+                                 modifier = Modifier.align(Alignment.Center)
+                             )
+                         }
+                     }
 
                 }
             }
@@ -402,7 +423,8 @@ fun FoodList(foodDisplays: List<FoodDisplay>, modifier: Modifier = Modifier,
                 foodDisplay = foodDisplay,
                 onEditClicked = onEditClicked,
                 onDeleteClicked = onDeleteClicked,
-                viewModel)
+                viewModel
+            )
         }
     }
 }

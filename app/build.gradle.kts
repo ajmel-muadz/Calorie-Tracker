@@ -83,10 +83,10 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
 
-    // Camera stuff
+    // Camera and Image stuff
     implementation("androidx.camera:camera-camera2:1.3.0-alpha04")
     implementation("androidx.camera:camera-lifecycle:1.3.0-alpha04")
-    implementation("io.coil-kt:coil-compose:2.2.0")
+    implementation("io.coil-kt:coil-compose:2.4.0")
 
 
     // Database stuff
