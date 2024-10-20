@@ -162,6 +162,8 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
 
         Spacer(modifier = Modifier.height(5.dp))  // Add some space between date switcher and list.
 
+        // This code block is responsible for displaying a summary of food details.
+
         // This code block is responsible for displaying the foods in a list.
         /* ----------------------------------------------------------------------------- */
         Column(
@@ -196,7 +198,8 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
                 modifier = Modifier.weight(1f),
                 onEditClicked = { handleEditFood(it, context, dateWithFoodsDao, viewModel) },
                 onDeleteClicked = { handleDeleteFood(it, context, scope, dateWithFoodsDao, viewModel) },
-                viewModel)
+                viewModel
+            )
         }
         /* ----------------------------------------------------------------------------- */
 

@@ -178,6 +178,8 @@ fun AddFoodScreen(
                     focusManager.clearFocus()  // Clear cursor focus.
                     keyboardController?.hide()  // Hide keyboard.
 
+                    // Trim leading and trailing whitespaces
+                    searchKey = searchKey.trimStart().trimEnd()
                     viewModel.fetchItems(searchKey)
                 }) {
                     Icon(
