@@ -216,7 +216,12 @@ fun AddFoodScreen(
 
                     // Trim leading and trailing whitespaces
                     searchKey = searchKey.trimStart().trimEnd()
-                    viewModel.fetchItems(searchKey)
+                    if (searchKey == "") {
+                        hasSearched = false
+                    } else {
+                        hasSearched = true
+                        viewModel.fetchItems(searchKey)
+                    }
                 }) {
                     Icon(
                         imageVector = Icons.Filled.Search,
@@ -380,17 +385,17 @@ fun AddFoodScreen(
                     }
                 }
 
-                // If no food item is found we launch an activity allowing for manual input.
-                if (viewModel.name == "No item found") {
-                    launchAddNutritionActivity(
-                        context,
-                        searchKey,
-                        currentDate,
-                        currentDateTimeInMillis
-                    )
-                    viewModel.name = "<Empty>"
-                }
+            // If no food item is found we launch an activity allowing for manual input.
+            if (viewModel.name == "No item found" && searchKey != "" && hasSearched) {
+                launchAddNutritionActivity(
+                    context,
+                    searchKey,
+                    currentDate,
+                    currentDateTimeInMillis
+                )
+                viewModel.name = "<Empty>"
             }
+        }
 
             IconButton(onClick = {
                 focusManager.clearFocus()  // Clear cursor focus.
