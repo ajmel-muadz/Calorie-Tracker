@@ -123,6 +123,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.ColorFilter
 
 
 // Constants are defined here.
@@ -346,6 +347,7 @@ fun SingleFood(foodDisplay: FoodDisplay,
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = "Edit a food's properties.",
+                            tint = Color(0xFF03738C)
                         )
                     }
                     Box(
@@ -357,6 +359,7 @@ fun SingleFood(foodDisplay: FoodDisplay,
                         Icon(
                             imageVector = Icons.Filled.Delete,
                             contentDescription = "Delete a food from the day's log.",
+                            tint = Color(0xFF03738C)
                         )
                     }
                     Box(
@@ -374,12 +377,14 @@ fun SingleFood(foodDisplay: FoodDisplay,
                             if (expanded.value) {
                                 Icon(
                                     imageVector = Icons.Filled.KeyboardArrowUp,
-                                    contentDescription = "Search button for searching for food."
+                                    contentDescription = "Search button for searching for food.",
+                                    tint = Color(0xFF03738C)
                                 )
                             } else {
                                 Icon(
                                     imageVector = Icons.Filled.KeyboardArrowDown,
-                                    contentDescription = "Search button for searching for food."
+                                    contentDescription = "Search button for searching for food.",
+                                    tint = Color(0xFF03738C)
                                 )
                             }
                         }
@@ -399,7 +404,7 @@ fun SingleFood(foodDisplay: FoodDisplay,
 
                         val imageString: String? = viewModel.getMealImageById(foodDisplay.id) // Get the image string from the firebase storage
 
-                        delay(2000)
+                        delay(1000)
 
                         // Decode the image string into a Bitmap
                         if (!imageString.isNullOrEmpty()) {
@@ -474,8 +479,6 @@ fun handleEditFood(foodDisplay: FoodDisplay, context: Context, dateWithFoodsDao:
         }
     }
 }
-
-
 
 fun handleDeleteFood(
     foodDisplay: FoodDisplay,
@@ -584,6 +587,7 @@ fun PreviousDay(viewModel: AppViewModel) {
         Image(
             painter = painterResource(id = DATE_ARROW_ICONS),
             contentDescription = "Button to go to the previous day",
+            colorFilter = ColorFilter.tint(Color(0xFF03738C)),
             modifier = Modifier
                 .size(25.dp)
                 .scale(scaleX = -1f, scaleY = 1f)  // Responsible for 'mirroring' icon.
@@ -601,6 +605,7 @@ fun NextDay(viewModel: AppViewModel) {
     ) {
         Image(
             painter = painterResource(id = DATE_ARROW_ICONS),
+            colorFilter = ColorFilter.tint(Color(0xFF03738C)),
             contentDescription = "Button to go to the next day",
             modifier = Modifier
                 .size(25.dp)
@@ -711,7 +716,8 @@ fun SummaryCard(viewModel: AppViewModel) {
                 }) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit Daily Goal"
+                        contentDescription = "Edit Daily Goal",
+                        tint = Color(0xFF03738C)
                     )
                 }
             }
@@ -749,6 +755,7 @@ fun SummaryCard(viewModel: AppViewModel) {
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = "Toggle More Info",
+                tint = Color(0xFF03738C),
                 modifier = Modifier
                     .size(24.dp)
                     .clickable { isExpanded = !isExpanded } // Toggle the state
@@ -756,9 +763,6 @@ fun SummaryCard(viewModel: AppViewModel) {
             )
         }
     }
-
-
-
 
     if (showDialog) {
         EditGoalDialog(

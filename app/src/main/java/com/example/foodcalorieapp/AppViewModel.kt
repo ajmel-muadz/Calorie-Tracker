@@ -59,9 +59,6 @@ class AppViewModel : ViewModel() {
     private val _foodsList = MutableLiveData<List<Food>>()
     val foodList: LiveData<List<Food>> = _foodsList
 
-    var selectedImageUri by mutableStateOf<Uri?>(null)
-
-
     fun setContext(context: Context) {
         dateWithFoodsDao = AppDatabase.getInstance(context).dateWithFoodsDao
         if (dateWithFoodsDao == null) {
@@ -73,7 +70,6 @@ class AppViewModel : ViewModel() {
             loadUserGoals()
         }
     }
-
 
     private fun initializeDefaultGoals() {
         viewModelScope.launch {
@@ -89,7 +85,6 @@ class AppViewModel : ViewModel() {
             }
         }
     }
-
 
     fun updateNutritionalGoals(newCaloriesGoal: Double, newFatGoal: Double, newProteinGoal: Double, newCarbGoal: Double) {
         caloriesGoal = newCaloriesGoal
@@ -118,7 +113,6 @@ class AppViewModel : ViewModel() {
             }
         }
     }
-
 
     fun incrementDate() {
         val currentDate = this.calendarDate
@@ -159,13 +153,10 @@ class AppViewModel : ViewModel() {
         }
     }
 
-
-
     fun updateFoodsList(updatedFoods: List<Food>) {
         _foodsList.value = updatedFoods
         refreshDailySummary()
     }
-
 
     // Anything contained in this code block is wholly responsible for API calls.
     /* -------------------------------------------------------------------------------------- */
@@ -212,6 +203,7 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    // Add meal image to firebase
     fun addMealToFirebase(image: Bitmap?, context: Context, id: Long){
 
         // on below line creating an instance of firebase firestore.
