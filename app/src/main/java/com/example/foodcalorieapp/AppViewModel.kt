@@ -44,6 +44,18 @@ class AppViewModel : ViewModel() {
     var formattedDate by mutableStateOf<String>(SimpleDateFormat.getDateInstance().format(Date()))
 
 
+    // New properties to track nutritional totals
+    var totalCalories by mutableStateOf(0.0)
+    var totalFat by mutableStateOf(0.0)
+    var totalProtein by mutableStateOf(0.0)
+    var totalCarbs by mutableStateOf(0.0)
+    var fatGoal by mutableStateOf(70.0)
+    var proteinGoal by mutableStateOf(50.0)
+    var carbGoal by mutableStateOf(300.0)
+    var caloriesGoal by mutableStateOf(2000.0)
+
+
+
     private val _foodsList = MutableLiveData<List<Food>>()
     val foodList: LiveData<List<Food>> = _foodsList
 
@@ -55,21 +67,71 @@ class AppViewModel : ViewModel() {
         if (dateWithFoodsDao == null) {
 
             Toast.makeText(context, "Failed to Initialize DAO", Toast.LENGTH_SHORT).show()
+        } else {
+            initializeDefaultGoals()
+            refreshDailySummary()
+            loadUserGoals()
         }
     }
 
+
+    private fun initializeDefaultGoals() {
+        viewModelScope.launch {
+            val existingGoals = dateWithFoodsDao?.getUserGoals()
+            if (existingGoals == null) {
+                val defaultGoals = UserGoals(
+                    caloriesGoal = caloriesGoal,
+                    fatGoal = fatGoal,
+                    proteinGoal = proteinGoal,
+                    carbGoal = carbGoal
+                )
+                dateWithFoodsDao?.insertUserGoals(defaultGoals)
+            }
+        }
+    }
+
+
+    fun updateNutritionalGoals(newCaloriesGoal: Double, newFatGoal: Double, newProteinGoal: Double, newCarbGoal: Double) {
+        caloriesGoal = newCaloriesGoal
+        fatGoal = newFatGoal
+        proteinGoal = newProteinGoal
+        carbGoal = newCarbGoal
+
+        viewModelScope.launch {
+            val userGoals = UserGoals(
+                caloriesGoal = newCaloriesGoal,
+                fatGoal = newFatGoal,
+                proteinGoal = newProteinGoal,
+                carbGoal = newCarbGoal
+            )
+            dateWithFoodsDao?.insertUserGoals(userGoals)
+        }
+    }
+
+    private fun loadUserGoals() {
+        viewModelScope.launch {
+            dateWithFoodsDao?.getUserGoals()?.let { savedGoals ->
+                caloriesGoal = savedGoals.caloriesGoal
+                fatGoal = savedGoals.fatGoal
+                proteinGoal = savedGoals.proteinGoal
+                carbGoal = savedGoals.carbGoal
+            }
+        }
+    }
 
 
     fun incrementDate() {
         val currentDate = this.calendarDate
         currentDate.add(Calendar.DAY_OF_MONTH, 1)
         this.formattedDate = SimpleDateFormat.getDateInstance().format(this.calendarDate.timeInMillis)
+        refreshDailySummary()
     }
 
     fun decrementDate() {
         val currentDate = this.calendarDate
         currentDate.add(Calendar.DAY_OF_MONTH, -1)
         this.formattedDate = SimpleDateFormat.getDateInstance().format(this.calendarDate.timeInMillis)
+        refreshDailySummary()
     }
 
     fun updateFood(food: Food, context: Context) {
@@ -77,14 +139,31 @@ class AppViewModel : ViewModel() {
             if (dateWithFoodsDao != null) {
                 dateWithFoodsDao?.updateFood(food)
                 Toast.makeText(context, "Food updated!", Toast.LENGTH_SHORT).show()
+                refreshDailySummary()
+
             } else {
                 Toast.makeText(context, "DAO not initialized!", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
+    fun refreshDailySummary() {
+        viewModelScope.launch {
+            dateWithFoodsDao?.let { dao ->
+                val foods = dao.getFoodsWithDate(formattedDate)
+                totalCalories = foods.sumOf { it.calories }
+                totalFat = foods.sumOf { it.fat }
+                totalProtein = foods.sumOf { it.protein }
+                totalCarbs = foods.sumOf { it.carbs }
+            }
+        }
+    }
+
+
+
     fun updateFoodsList(updatedFoods: List<Food>) {
         _foodsList.value = updatedFoods
+        refreshDailySummary()
     }
 
 

@@ -100,14 +100,22 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Divider
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
@@ -155,6 +163,8 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current;
 
+    var totalCalories by remember { mutableStateOf(0.0) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -165,6 +175,15 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
         DaySwitcher(viewModel)
 
         Spacer(modifier = Modifier.height(5.dp))  // Add some space between date switcher and list.
+
+
+        LaunchedEffect(viewModel.formattedDate) {
+            scope.launch {
+                val foodsForDate = dateWithFoodsDao.getFoodsWithDate(viewModel.formattedDate)
+                totalCalories = foodsForDate.sumOf { it.calories }
+            }
+        }
+
 
         // This code block is responsible for displaying a summary of food details.
 
@@ -209,6 +228,12 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
         }
         /* ----------------------------------------------------------------------------- */
 
+
+
+        SummaryCard(viewModel = viewModel)
+
+        Spacer(modifier = Modifier.height(5.dp))
+
         // Button used to add food.
         SearchFoodButton(viewModel)
     }
@@ -220,7 +245,7 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
 fun SingleFood(foodDisplay: FoodDisplay,
                onEditClicked: (FoodDisplay) -> Unit,
                onDeleteClicked: (FoodDisplay) -> Unit,
-               viewModel: AppViewModel){
+               viewModel: AppViewModel) {
 
     var decodedImage by remember { mutableStateOf<Bitmap?>(null) }
     var loadingImage by remember { mutableStateOf(false) }
@@ -234,6 +259,7 @@ fun SingleFood(foodDisplay: FoodDisplay,
         )
     )
 
+
     Card(
         modifier = Modifier
             .padding(10.dp)
@@ -243,7 +269,7 @@ fun SingleFood(foodDisplay: FoodDisplay,
     ) {
         Column(
 
-        ){
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -268,7 +294,7 @@ fun SingleFood(foodDisplay: FoodDisplay,
                             text = "${foodDisplay.calories} kcal",
                             fontSize = 12.sp
                         )
-                    }else{
+                    } else {
                         Text(
                             text = foodDisplay.name,
                             fontSize = 15.sp,
@@ -335,19 +361,19 @@ fun SingleFood(foodDisplay: FoodDisplay,
                         modifier = Modifier
                             .size(50.dp)
                     ) {
-                        IconButton(onClick ={
-                            if(expanded.value){
+                        IconButton(onClick = {
+                            if (expanded.value) {
                                 expanded.value = false
-                            }else{
+                            } else {
                                 expanded.value = true
                             }
                         }) {
-                            if (expanded.value){
+                            if (expanded.value) {
                                 Icon(
                                     imageVector = Icons.Filled.KeyboardArrowUp,
                                     contentDescription = "Search button for searching for food."
                                 )
-                            }else{
+                            } else {
                                 Icon(
                                     imageVector = Icons.Filled.KeyboardArrowDown,
                                     contentDescription = "Search button for searching for food."
@@ -373,43 +399,42 @@ fun SingleFood(foodDisplay: FoodDisplay,
                         delay(2000)
 
 
-                        if (!imageString.isNullOrEmpty()){
+                        if (!imageString.isNullOrEmpty()) {
                             val imageBytes = Base64.decode(imageString, Base64.DEFAULT)
-                            decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                            decodedImage =
+                                BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                         }
 
                         loadingImage = false
                     }
-                     if (loadingImage){
-                            CircularProgressIndicator(
+                    if (loadingImage) {
+                        CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center)
                         )
-                    }else{
-                         // Display the image if it's not null
-                         if (decodedImage != null){
-                             Image(
-                                 bitmap = decodedImage!!.asImageBitmap(),
-                                 contentDescription = "Captured Image",
-                                 modifier = Modifier
-                                     .fillMaxSize()
-                                     .aspectRatio(2f)
-                             )
-                         }
-                         else {
-                             // Display a placeholder or loading indicator
-                             Text(
-                                 text = "No Image Found",
-                                 modifier = Modifier.align(Alignment.Center)
-                             )
-                         }
-                     }
+                    } else {
+                        // Display the image if it's not null
+                        if (decodedImage != null) {
+                            Image(
+                                bitmap = decodedImage!!.asImageBitmap(),
+                                contentDescription = "Captured Image",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .aspectRatio(2f)
+                            )
+                        } else {
+                            // Display a placeholder or loading indicator
+                            Text(
+                                text = "No Image Found",
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
 
                 }
             }
         }
     }
 }
-
 
 
 @Composable
@@ -643,6 +668,160 @@ private fun launchAddFoodActivity(context: Context, viewModel: AppViewModel) {
     context.startActivity(intent)
 }
 
+
+@Composable
+fun SummaryCard(viewModel: AppViewModel) {
+    var isExpanded by remember { mutableStateOf(false) } // State to track expansion
+    var showDialog by remember { mutableStateOf(false) } // State to control dialog visibility
+    val context = LocalContext.current
+
+    ElevatedCard(
+        elevation = CardDefaults.cardElevation(defaultElevation = 15.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { isExpanded = !isExpanded }, // Toggle expansion on click
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFB9B9B9))
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Daily Summary",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                IconButton(onClick = {
+                    showDialog = true // Open the dialog when clicked
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit Daily Goal"
+                    )
+                }
+            }
+
+            // Display the main calories summary
+            Text(
+                text = "Calories: ${viewModel.totalCalories} / ${viewModel.caloriesGoal} kcal",
+                fontSize = 16.sp
+            )
+
+            if (isExpanded) {
+                // Show expanded details
+                Column {
+                    Text(
+                        text = "${viewModel.totalFat}g fat / ${viewModel.fatGoal}g",
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = "${viewModel.totalProtein}g protein / ${viewModel.proteinGoal}g",
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = "${viewModel.totalCarbs}g carbs / ${viewModel.carbGoal}g",
+                        fontSize = 14.sp
+                    )
+                }
+            }
+
+            // Arrow icon to indicate expand/collapse state
+            Icon(
+                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = "Toggle More Info",
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { isExpanded = !isExpanded } // Toggle the state
+                    .align(Alignment.CenterHorizontally)
+            )
+        }
+    }
+
+
+
+
+    if (showDialog) {
+        EditGoalDialog(
+            viewModel = viewModel,
+            onDismiss = { showDialog = false },
+            onSave = {
+                showDialog = false
+                viewModel.refreshDailySummary() // Refresh summary after saving goals
+            }
+        )
+    }
+
+}
+@Composable
+fun EditGoalDialog(
+    viewModel: AppViewModel,
+    onDismiss: () -> Unit,
+    onSave: () -> Unit
+) {
+    var newCalorieGoal by remember { mutableStateOf(viewModel.caloriesGoal.toString()) }
+    var newFatGoal by remember { mutableStateOf(viewModel.fatGoal.toString()) }
+    var newProteinGoal by remember { mutableStateOf(viewModel.proteinGoal.toString()) }
+    var newCarbGoal by remember { mutableStateOf(viewModel.carbGoal.toString()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Edit Nutritional Goals") },
+        text = {
+            Column {
+                TextField(
+                    value = newCalorieGoal,
+                    onValueChange = { newCalorieGoal = it },
+                    label = { Text("Calorie Goal (kcal)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                TextField(
+                    value = newFatGoal,
+                    onValueChange = { newFatGoal = it },
+                    label = { Text("Fat Goal (g)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                TextField(
+                    value = newProteinGoal,
+                    onValueChange = { newProteinGoal = it },
+                    label = { Text("Protein Goal (g)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                TextField(
+                    value = newCarbGoal,
+                    onValueChange = { newCarbGoal = it },
+                    label = { Text("Carb Goal (g)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                // Save to ViewModel and Database
+                viewModel.updateNutritionalGoals(
+                    newCalorieGoal.toDoubleOrNull() ?: viewModel.caloriesGoal,
+                    newFatGoal.toDoubleOrNull() ?: viewModel.fatGoal,
+                    newProteinGoal.toDoubleOrNull() ?: viewModel.proteinGoal,
+                    newCarbGoal.toDoubleOrNull() ?: viewModel.carbGoal
+                )
+                onSave() // Close dialog and refresh UI
+            }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+
+
+
 @Composable
 fun SearchFoodButton(viewModel: AppViewModel) {
     val context = LocalContext.current
@@ -719,6 +898,18 @@ fun PreviewMainAppWithMockData() {
 
         override suspend fun deleteDate(date: Date) {
 
+        }
+
+        override suspend fun insertUserGoals(userGoals: UserGoals) {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun updateUserGoals(userGoals: UserGoals) {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun getUserGoals(): UserGoals? {
+            TODO("Not yet implemented")
         }
     }
 

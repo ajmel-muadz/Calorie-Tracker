@@ -584,6 +584,18 @@ val mockDateWithFoodsDao = object : DateWithFoodsDao {
 
      }
 
+     override suspend fun insertUserGoals(userGoals: UserGoals) {
+         TODO("Not yet implemented")
+     }
+
+     override suspend fun updateUserGoals(userGoals: UserGoals) {
+         TODO("Not yet implemented")
+     }
+
+     override suspend fun getUserGoals(): UserGoals? {
+         TODO("Not yet implemented")
+     }
+
      override suspend fun resetFoodIdCounter() {
          TODO("Not yet implemented")
      }
