@@ -54,6 +54,18 @@ data class DateWithFoods(
     val foods: List<Food>
 )
 
+@Entity(tableName = "user_goals")
+data class UserGoals(
+    @PrimaryKey val id: Int = 1,
+    val caloriesGoal: Double,
+    val fatGoal: Double,
+    val proteinGoal: Double,
+    val carbGoal: Double
+)
+
+
+
+
 @Dao
 interface DateWithFoodsDao {
 
@@ -86,14 +98,26 @@ interface DateWithFoodsDao {
 
     @Delete
     suspend fun deleteDate(date: Date)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUserGoals(userGoals: UserGoals)
+
+    @Update
+    suspend fun updateUserGoals(userGoals: UserGoals)
+
+    @Query("SELECT * FROM user_goals WHERE id = 1")
+    suspend fun getUserGoals(): UserGoals?
+
+
 }
 
 @Database(
     entities = [
         Date::class,
-        Food::class
+        Food::class,
+        UserGoals::class
     ],
-    version = 1
+    version = 2
 ) abstract class AppDatabase : RoomDatabase() {
     abstract val dateWithFoodsDao: DateWithFoodsDao
 
@@ -107,7 +131,7 @@ interface DateWithFoodsDao {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "date-with-foods-database"
-                ).build().also {
+                ).fallbackToDestructiveMigration().build().also {
                     INSTANCE = it
                 }
             }
