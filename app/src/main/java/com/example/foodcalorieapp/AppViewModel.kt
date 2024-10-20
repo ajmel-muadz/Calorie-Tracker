@@ -37,12 +37,11 @@ import java.util.Calendar
 import java.util.Date
 
 class AppViewModel : ViewModel() {
-
-
     private var dateWithFoodsDao: DateWithFoodsDao? = null
     var calendarDate by mutableStateOf<Calendar>(Calendar.getInstance())
     var formattedDate by mutableStateOf<String>(SimpleDateFormat.getDateInstance().format(Date()))
 
+    var mealType by mutableStateOf("")  // Global variable to hold the meal type.
 
     // New properties to track nutritional totals
     var totalCalories by mutableStateOf(0.0)
@@ -53,8 +52,6 @@ class AppViewModel : ViewModel() {
     var proteinGoal by mutableStateOf(50.0)
     var carbGoal by mutableStateOf(300.0)
     var caloriesGoal by mutableStateOf(2000.0)
-
-
 
     private val _foodsList = MutableLiveData<List<Food>>()
     val foodList: LiveData<List<Food>> = _foodsList

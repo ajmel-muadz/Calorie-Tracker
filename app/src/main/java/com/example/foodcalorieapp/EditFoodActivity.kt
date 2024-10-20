@@ -1,12 +1,37 @@
+// Credits...
+/* -------------------------------------------------------------------------------- */
+// Below link helped me with integrating Jetpack Compose modules into XML-based Android
+// 1. https://stackoverflow.com/questions/65648904/android-jetpack-compose-and-xml-in-activity
+/* -------------------------------------------------------------------------------- */
+
 package com.example.foodcalorieapp
 
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
@@ -62,14 +87,50 @@ class EditFoodActivity : ComponentActivity() {
         proteinEditText.setText(foodProtein.toString())
         carbsEditText.setText(foodCarbs.toString())
 
+
+        // Embed the radio button group in the ComposeView
+        val mealTypeComposeView = findViewById<ComposeView>(R.id.radioButtonComposable)
+        mealTypeComposeView.setContent {
+            // Drop down menu allowing a user to choose their meal type.
+            /* -------------------------------------------------------------------------- */
+            val mealOptions = listOf("Breakfast", "Lunch", "Dinner", "Snack")
+            val (selectedOption, onOptionSelected) = remember { mutableStateOf(mealOptions[0]) }
+            // Modifier.selectableGroup() is recommended to use by Google's documentation. I am just following orders.
+            Column(Modifier.selectableGroup()) {
+                mealOptions.forEach { text ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .selectable(
+                                selected = (text == selectedOption),
+                                onClick = { onOptionSelected(text) },
+                                role = Role.RadioButton
+                            )
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = (text == selectedOption), onClick = { onOptionSelected(text) })
+                        Text(
+                            text = text,
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(start = 16.dp)
+                        )
+                    }
+                }
+            }
+
+            appViewModel.mealType = selectedOption
+            /* -------------------------------------------------------------------------- */
+        }
+
         backButton.setOnClickListener {
             finish()
         }
 
         // Save the updated food details
         saveButton.setOnClickListener {
-
-
             val updatedName = nameEditText.text.toString()
             val updatedCalories = caloriesEditText.text.toString().toDoubleOrNull() ?: 0.0
             val updatedFat = fatEditText.text.toString().toDoubleOrNull() ?: 0.0
@@ -83,6 +144,7 @@ class EditFoodActivity : ComponentActivity() {
                 fat = updatedFat,
                 protein = updatedProtein,
                 carbs = updatedCarbs,
+                mealType = appViewModel.mealType,
                 dateString = currentDateString // should I keep the dateString to what it was before or change it to the time the food was updated?
             )
 

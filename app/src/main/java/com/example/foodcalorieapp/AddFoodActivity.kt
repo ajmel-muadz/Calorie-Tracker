@@ -23,6 +23,9 @@
 //
 // Below link helped me convert the image retrieved from gallery to a bitmap using content resolver
 // 8. https://www.geeksforgeeks.org/content-providers-in-android-with-example/
+
+// Below link helped with radio button groups in Jetpack Compose.
+// 9. https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#RadioButton(kotlin.Boolean,kotlin.Function0,androidx.compose.ui.Modifier,kotlin.Boolean,androidx.compose.material3.RadioButtonColors,androidx.compose.foundation.interaction.MutableInteractionSource)
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
@@ -55,6 +58,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -68,6 +73,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -88,6 +94,7 @@ import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -148,7 +155,7 @@ fun AddFoodScreen(
 
     var image by remember { mutableStateOf<Bitmap?>(null) }
 
-    var hasSearched by remember { mutableStateOf(false) }
+    var hasSearched by remember { mutableStateOf(false) }  // Variable to ensure that a user has searched in the search field.
 
     // Launcher for taking a picture with the camera.
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -236,6 +243,7 @@ fun AddFoodScreen(
         )
         /* --------------------------------------------------------------------------- */
 
+        // Card to display food found in the API call.
         Column(
             modifier = Modifier
                 .weight(1f),
@@ -355,6 +363,40 @@ fun AddFoodScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
+                /* -------------------------------------------------------------------------- */
+
+
+                // Drop down menu allowing a user to choose their meal type.
+                /* -------------------------------------------------------------------------- */
+                val mealOptions = listOf("Breakfast", "Lunch", "Dinner", "Snack")
+                val (selectedOption, onOptionSelected) = remember { mutableStateOf(mealOptions[0]) }
+                // Modifier.selectableGroup() is recommended to use by Google's documentation. I am just following orders.
+                Column(Modifier.selectableGroup()) {
+                    mealOptions.forEach { text ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .selectable(
+                                    selected = (text == selectedOption),
+                                    onClick = { onOptionSelected(text) },
+                                    role = Role.RadioButton
+                                )
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = (text == selectedOption), onClick = { onOptionSelected(text) })
+                            Text(
+                                text = text,
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 16.dp)
+                            )
+                        }
+                    }
+                }
+
+                viewModel.mealType = selectedOption
                 /* -------------------------------------------------------------------------- */
             }
             /* -------------------------------------------------------------------------- */
@@ -483,6 +525,7 @@ fun AddFoodScreen(
                 val foodFatToAdd: Double = viewModel.fat!!
                 val foodProteinToAdd: Double = viewModel.protein!!
                 val foodCarbsToAdd: Double = viewModel.carbs!!
+                val foodMealTypeToAdd: String = viewModel.mealType
 
                 // Add the corresponding data to the database.
                 /* ------------------------------------------------------------------------------------------- */
@@ -493,6 +536,7 @@ fun AddFoodScreen(
                     fat = foodFatToAdd,
                     protein = foodProteinToAdd,
                     carbs = foodCarbsToAdd,
+                    mealType = foodMealTypeToAdd,
                     dateString = currentDateToAdd
                 )
 
@@ -540,6 +584,7 @@ private fun launchMainActivity(context: Context, returnCurrentDate: String?, ret
     context.startActivity(intent)
 }
 
+/*
  // Mock implementation for the preview, this should make it easier for us with using split screen
 val mockDateWithFoodsDao = object : DateWithFoodsDao {
     override suspend fun getFoodsWithDate(dateString: String): List<Food> {
@@ -592,10 +637,10 @@ val mockDateWithFoodsDao = object : DateWithFoodsDao {
          TODO("Not yet implemented")
      }
 
-}
+} */
 
 
-
+/*
 @Preview(showBackground = true)
 @Composable
 fun PreviewAddFoodScreen() {
@@ -613,7 +658,7 @@ fun PreviewAddFoodScreen() {
         currentDate = "2024-10-18",
         currentDateTimeInMillis = System.currentTimeMillis()
     )
-}
+} */
 
 
 
