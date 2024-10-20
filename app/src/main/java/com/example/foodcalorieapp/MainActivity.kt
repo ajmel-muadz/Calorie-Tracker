@@ -222,10 +222,12 @@ fun SingleFood(foodDisplay: FoodDisplay,
                onDeleteClicked: (FoodDisplay) -> Unit,
                viewModel: AppViewModel){
 
-    var decodedImage by remember { mutableStateOf<Bitmap?>(null) }
-    var loadingImage by remember { mutableStateOf(false) }
+    var decodedImage by remember { mutableStateOf<Bitmap?>(null) } // State variable to hold decoded image
+    var loadingImage by remember { mutableStateOf(false) } // State variable to control image loading
 
-    val expanded = remember { mutableStateOf(false) }
+    val expanded = remember { mutableStateOf(false) } // State variable to control expanded state
+
+    // Expand animation for the card.
     val extraPadding by animateDpAsState(
         if (expanded.value) 20.dp else 20.dp,
         animationSpec = spring(
@@ -342,6 +344,7 @@ fun SingleFood(foodDisplay: FoodDisplay,
                                 expanded.value = true
                             }
                         }) {
+                            // Icon for expanding the card.
                             if (expanded.value){
                                 Icon(
                                     imageVector = Icons.Filled.KeyboardArrowUp,
@@ -366,20 +369,21 @@ fun SingleFood(foodDisplay: FoodDisplay,
                     LaunchedEffect(foodDisplay.id) {
                         Log.d("FoodLog", "Food ID: ${foodDisplay.id}")
 
-                        loadingImage = true
+                        loadingImage = true // Set loadingImage to true before decoding the image
 
-                        val imageString: String? = viewModel.getMealImageById(foodDisplay.id)
+                        val imageString: String? = viewModel.getMealImageById(foodDisplay.id) // Get the image string from the firebase storage
 
                         delay(2000)
 
-
+                        // Decode the image string into a Bitmap
                         if (!imageString.isNullOrEmpty()){
                             val imageBytes = Base64.decode(imageString, Base64.DEFAULT)
                             decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                         }
 
-                        loadingImage = false
+                        loadingImage = false // Set loadingImage to false after decoding the image
                     }
+                    // Display a loading indicator while the image is being decoded
                      if (loadingImage){
                             CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center)
@@ -464,6 +468,10 @@ fun handleDeleteFood(
         val foodToDelete = foodList.find { it.id == foodDisplay.id }
 
         foodToDelete?.let {
+
+            // Delete the image from Firebase Storage
+            viewModel.deleteMealImageFromFirebase(it.id, context)
+
             // Delete the food from the database
             dateWithFoodsDao.deleteFood(it)
             Toast.makeText(context, "Food deleted!", Toast.LENGTH_SHORT).show()

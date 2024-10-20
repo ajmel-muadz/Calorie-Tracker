@@ -58,8 +58,6 @@ class AppViewModel : ViewModel() {
         }
     }
 
-
-
     fun incrementDate() {
         val currentDate = this.calendarDate
         currentDate.add(Calendar.DAY_OF_MONTH, 1)
@@ -166,22 +164,21 @@ class AppViewModel : ViewModel() {
     }
 
     suspend fun getMealImageById(inId: Long?): String?{
-        val db = FirebaseFirestore.getInstance()
+        val db = FirebaseFirestore.getInstance() // Initialize Firebase Firestore
         var returnVal: String? = null
 
         try {
+            // Query Firestore for the meal image with the given ID
             val querySnapshot = db.collection("MealImagesMouktada")
                 .whereEqualTo("id", inId)
                 .get()
                 .await()
 
+            // Iterate through the query results and retrieve the image
             for (document in querySnapshot.documents) {
-                val mealImage = document.toObject(MealImage::class.java)
-                returnVal = mealImage?.image
+                val mealImage = document.toObject(MealImage::class.java) // Convert Firestore document to MealImage object
+                returnVal = mealImage?.image // Return the image string
             }
-
-
-
         }catch(e: Exception){
             Log.e("FirestoreError", "Error getting meal image", e)
         }
@@ -190,14 +187,16 @@ class AppViewModel : ViewModel() {
     }
 
     suspend fun deleteMealImageFromFirebase(id: Long, context: Context){
-        val db = FirebaseFirestore.getInstance()
+        val db = FirebaseFirestore.getInstance() // Initialize Firebase Firestore
 
         try{
+            // Query Firestore for the meal image with the given ID
             val querySnapshot = db.collection("MealImagesMouktada")
                 .whereEqualTo("id", id)
                 .get()
                 .await()
 
+            // Iterate through the query results and delete the image
             for(document in querySnapshot.documents){
                 document.reference.delete()
                     .addOnSuccessListener {
