@@ -16,7 +16,13 @@
 // 5. https://developer.android.com/develop/ui/compose/side-effects#:~:text=To%20perform%20work%20over%20the,if%20LaunchedEffect%20leaves%20the%20composition.
 
 // Below link helped with adding data to Firebase Firestore.
-//6. https://www.geeksforgeeks.org/android-jetpack-compose-add-data-to-firebase-firestore/
+// 6. https://www.geeksforgeeks.org/android-jetpack-compose-add-data-to-firebase-firestore/
+//
+// Below link helped me retrieve an image from the gallery
+// 7. https://medium.com/@daniel.atitienei/picking-images-from-gallery-using-jetpack-compose-a18c11d93e12
+//
+// Below link helped me convert the image retrieved from gallery to a bitmap using content resolver
+// 8. https://www.geeksforgeeks.org/content-providers-in-android-with-example/
 /* -------------------------------------------------------------------------------- */
 
 package com.example.foodcalorieapp
@@ -76,6 +82,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -129,6 +136,8 @@ fun AddFoodScreen(
     /* ---------------------------------------------------------------------------------------- */
 
     var image by remember { mutableStateOf<Bitmap?>(null) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var imageSelection by remember { mutableStateOf(false) }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
@@ -141,6 +150,23 @@ fun AddFoodScreen(
         }
     }
 
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let{
+                val contentResolver = context.contentResolver
+                try {
+                    val inputStream = contentResolver.openInputStream(it)
+                    image = android.graphics.BitmapFactory.decodeStream(inputStream)
+                    imageUri = it
+                }catch (e: Exception){
+                    Log.e("AddFoodActivity", "Failed to load image", e)
+                }
+            }
+        }
+    )
+
+
     val permissionLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
@@ -152,6 +178,18 @@ fun AddFoodScreen(
                 Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
             }
         }
+
+//    val galleryPermissionLauncher =
+//        rememberLauncherForActivityResult(
+//            contract = ActivityResultContracts.RequestPermission()
+//        ) { isGranted: Boolean->
+//            if (isGranted) {
+//                Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
+//                galleryLauncher.launch("image/*")
+//            } else {
+//                Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
+//            }
+//        }
     /* ---------------------------------------------------------------------------------------- */
 
 
@@ -284,19 +322,26 @@ fun AddFoodScreen(
             if (showImageBox) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .padding(10.dp)
-                        .background(Color.Gray),
+                        .fillMaxSize()
+                        .padding(10.dp),
                     contentAlignment = Alignment.Center
                 ) {
+
                     image?.let { bitmap ->
                         Image(
                             bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Captured Image",
-                            modifier = Modifier.fillMaxSize()
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(10.dp))
+                        )
+                    } ?: run{
+                        Text (
+                            text = "No image captured",
+                            modifier = Modifier.align(Alignment.Center),
                         )
                     }
+
                 }
             }
 
@@ -367,7 +412,11 @@ fun AddFoodScreen(
                         }
                         Button(
                             onClick = {
-                                // Action for "Select From Gallery" button
+                                showDialog = false
+                                showImageBox = true
+                                imageSelection = true
+
+                                galleryLauncher.launch("image/*")
                             },
                             modifier = Modifier
                                 .padding(bottom = 10.dp)
