@@ -136,6 +136,7 @@ fun AddFoodScreen(
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var hasSearched by remember { mutableStateOf(false) }
 
     var searchKey by remember { mutableStateOf("") }  // Variable for search term
 
