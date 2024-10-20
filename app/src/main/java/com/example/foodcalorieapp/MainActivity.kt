@@ -163,6 +163,7 @@ fun MainApp(viewModel: AppViewModel, dateWithFoodsDao: DateWithFoodsDao) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current;
 
+    viewModel.refreshDailySummary()
     var totalCalories by remember { mutableStateOf(0.0) }
 
     Column(
@@ -493,6 +494,8 @@ fun handleDeleteFood(
             dateWithFoodsDao.deleteFood(it)
             Toast.makeText(context, "Food deleted!", Toast.LENGTH_SHORT).show()
 
+            viewModel.refreshDailySummary()
+            
             // Check if there are any remaining foods for this date
             val remainingFoods = dateWithFoodsDao.getFoodsWithDate(selectedDateString)
             if (remainingFoods.isEmpty()) {
@@ -706,7 +709,7 @@ fun SummaryCard(viewModel: AppViewModel) {
 
             // Display the main calories summary
             Text(
-                text = "Calories: ${viewModel.totalCalories} / ${viewModel.caloriesGoal} kcal",
+                text = "Calories: ${String.format("%.2f", viewModel.totalCalories)} / ${String.format("%.2f", viewModel.caloriesGoal)} kcal",
                 fontSize = 16.sp
             )
 
@@ -714,15 +717,15 @@ fun SummaryCard(viewModel: AppViewModel) {
                 // Show expanded details
                 Column {
                     Text(
-                        text = "${viewModel.totalFat}g fat / ${viewModel.fatGoal}g",
+                        text = "${String.format("%.2f", viewModel.totalFat)}g fat / ${String.format("%.2f", viewModel.fatGoal)}g",
                         fontSize = 14.sp
                     )
                     Text(
-                        text = "${viewModel.totalProtein}g protein / ${viewModel.proteinGoal}g",
+                        text = "${String.format("%.2f", viewModel.totalProtein)}g protein / ${String.format("%.2f", viewModel.proteinGoal)}g",
                         fontSize = 14.sp
                     )
                     Text(
-                        text = "${viewModel.totalCarbs}g carbs / ${viewModel.carbGoal}g",
+                        text = "${String.format("%.2f", viewModel.totalCarbs)}g carbs / ${String.format("%.2f", viewModel.carbGoal)}g",
                         fontSize = 14.sp
                     )
                 }
