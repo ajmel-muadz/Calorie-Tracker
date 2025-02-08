@@ -109,6 +109,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.WindowCompat
 import coil.compose.rememberAsyncImagePainter
 import com.example.foodcalorieapp.ui.theme.FoodCalorieAppTheme
 import kotlinx.coroutines.launch

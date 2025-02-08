@@ -1,13 +1,13 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    id("kotlin-kapt")
+    id("com.google.devtools.ksp")
     id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.foodcalorieapp"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.foodcalorieapp"
@@ -91,7 +91,7 @@ dependencies {
 
     // Database stuff
     implementation("androidx.room:room-runtime:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
 
     // Firebase stuff
