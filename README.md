@@ -1,68 +1,72 @@
 ## About The Project 
 
-Connect Four Android Game
-
-This project is a feature-rich implementation of the classic Connect Four game for Android. The application is designed to provide an engaging and customizable experience for players while demonstrating key concepts in Android app development, including UI design, event handling, game logic, and modular architecture.
+Food Calorie Management App
 
 Objective
 
-The primary objective of this project is to develop a Connect Four game that supports multiple gameplay modes, personalization options, user profile creation, gameplay statistics tracking, and adaptive UI design. This project showcases a structured approach to software development while adhering to best practices in Android architecture.
+The Food Calorie Management App is an Android application designed to help users log their daily meals, track their calorie intake, search for food nutritional information using external APIs, and upload meal photos. The app ensures data persistence, allowing users to access their logs and images even after restarting the app. It also supports multiple screen sizes, handles screen rotations, and prevents crashes.
 
 Features
 
-1. Multiple Game Modes
+1. Daily Food Log and Calorie Tracking
 
-Two-Player Mode: Two human players can take turns playing on the same device.
+Users can add meals by entering details such as food name, portion size, and meal type (breakfast, lunch, dinner, snack).
 
-AI Mode: A single player competes against an AI opponent that makes random valid moves.
+The app calculates the total calories for each meal using food nutritional information from an external API or manually entered data.
 
-2. Personalization Options
+If an API does not return data for a particular food item, users can manually enter nutritional information.
 
-Grid Size Selection: Players can choose from standard (7x6), small (6x5), or large (8x7) grids.
+Displays a summary of the user’s total daily calorie intake compared to a predefined daily goal (e.g., 2000 kcal).
 
-Custom Player Colors: Users can select their preferred disc colors.
+Meals are displayed in a scrollable list.
 
-Custom Player Names: Players can enter and use their preferred names in the game.
+The food log persists, ensuring that users can view logged meals even after closing and reopening the app.
 
-3. User Profile & Avatars
+2. Search for Food Information using APIs
 
-Players can create a profile with a custom username and avatar.
+Integrates external APIs (e.g., CalorieNinjas API, Nutritionix API, Open Food Facts API) to retrieve food nutritional details.
 
-Profile information is stored locally (data may be lost upon app closure).
+Displays calorie content and key nutritional information (fats, proteins, carbohydrates) for each searched food item.
 
-4. Gameplay Statistics Tracking
+Allows users to add searched food items to their daily log with persistent storage.
 
-Tracks and displays statistics such as games played, wins, losses, and win percentages.
+3. Photo Upload for Meals
 
-Statistics are stored temporarily and reset when the app is closed.
+Users can upload meal photos from their camera or gallery.
 
-5. In-Game Information & Features
+Each photo is associated with a meal entry in the log to help users visually track their meals.
 
-Game Board: Displays a clear visual representation of the grid and player moves.
+Meal photos persist in the app for future access.
 
-Player Indicators: Shows the current turn and player names.
+4. Cloud Storage for Meal Photos
 
-Move Tracking: Displays the number of moves made and remaining.
+Uses a cloud storage solution (e.g., Firebase) for storing meal photos.
 
-Notifications & Messages: Provides messages for important game events (win, draw, invalid move, etc.).
+Provides a progress indicator while uploading photos.
 
-Undo & Reset: Players can undo the last move or reset the board.
+Notifies users when uploads are complete and links cloud-stored photos to meal entries.
 
-Settings & Menu: Access customization settings and navigate through the app.
+Technical Implementation
 
-User Profile Display: Shows player information, including avatars and usernames.
+Developed in Java or Kotlin.
 
-6. Technical Implementation
+Utilizes third-party libraries and frameworks to enhance functionality.
 
-Adaptive UI: Ensures smooth transitions between landscape and portrait orientations and compatibility across various devices (phones and tablets).
+Implements asynchronous operations for API calls and data uploads, ensuring smooth user experience.
 
-State Preservation: Maintains game state when switching device orientation.
-
-Modular UI Architecture: Separates different UI components (menu, settings, game interface, etc.) for improved maintainability and scalability.
+Ensures responsive design across various screen sizes and orientations.
 
 Conclusion
 
-This project serves as an excellent demonstration of Android game development principles, showcasing a balance between user engagement, customization, and software engineering best practices. It is built with modularity in mind, allowing for future enhancements and scalability.
+The Food Calorie Management App is a robust solution for tracking calorie intake, integrating external nutritional databases, and managing meal photos. Its user-friendly interface, data persistence, and cloud storage capabilities make it a valuable tool for health-conscious users.
 
+## Build With
+- Jetpack Compose
+- Kotlin
+- RESTful API
+- Android Room
+- CalorieNinjas
+- FireBase
 
+## Download 
 Link to downloading the app: https://ajmel-muadz.itch.io/calorie-tracker-app
