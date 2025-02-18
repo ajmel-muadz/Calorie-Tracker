@@ -70,3 +70,12 @@ The Food Calorie Management App is a robust solution for tracking calorie intake
 
 ## Download 
 Link to downloading the app: https://ajmel-muadz.itch.io/calorie-tracker-app
+
+## Authors
+- [Ajmel Muadz](https://github.com/ajmel-muadz)
+- [Mouktada Salman](https://github.com/MouktadaSalman)
+- [Ahmed Youseif](https://github.com/Ahmedo-o)
+- [M.Jauhar](https://github.com/MasterBam)
+
+## License
+This project is for educational purposes only.
