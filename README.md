@@ -71,6 +71,7 @@ The Food Calorie Management App is a robust solution for tracking calorie intake
 ## Download 
 Link to downloading the app: https://github.com/ajmel-muadz/Calorie-Tracker/releases/tag/Calorie-Tracker%2Fv1.0
 
+Install the 'app-release.apk' file.
 ## Authors
 - [Ajmel Muadz](https://github.com/ajmel-muadz)
 - [Mouktada Salman](https://github.com/MouktadaSalman)
