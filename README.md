@@ -69,7 +69,7 @@ The Food Calorie Management App is a robust solution for tracking calorie intake
 - FireBase
 
 ## Download 
-Link to downloading the app: https://ajmel-muadz.itch.io/calorie-tracker-app
+Link to downloading the app: https://github.com/ajmel-muadz/Calorie-Tracker/releases/tag/Calorie-Tracker%2Fv1.0
 
 ## Authors
 - [Ajmel Muadz](https://github.com/ajmel-muadz)
